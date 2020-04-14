@@ -1,0 +1,13 @@
+"ID","Description","GeneRatio","BgRatio","pvalue","p.adjust","qvalue","geneID","Count"
+"R-MMU-8978868","Fatty acid metabolism","20/277","169/8772",3.27479678585726e-07,9.79358728392239e-05,9.03426557600085e-05,"Acaca/Acly/Fasn/Dbi/Elovl6/Acacb/Ehhadh/Thrsp/Cyp4a12a/Ephx2/Fads2/Cyp4b1/Cyp4a31/Acsl1/Akr1c6/Mid1ip1/Slc27a2/Fads1/Cyp4a12b/Acot1",20
+"R-MMU-8957322","Metabolism of steroids","17/277","125/8772",3.51024633832344e-07,9.79358728392239e-05,9.03426557600085e-05,"Tm7sf2/Hsd17b11/Dhcr7/Nsdhl/Stard4/Fdps/Cyp51/Dhcr24/Abcc3/Slc10a2/Akr1c6/Osbp/Slc27a2/Cyp2r1/Gm4450/Msmo1/Cyp7a1",17
+"R-MMU-211859","Biological oxidations","21/277","202/8772",1.45209468644024e-06,0.000270089611677885,0.000249148877778695,"Cyp4v3/Ces1d/Cyp51/Cyp4a12a/Ugt2b1/Gstm7/Ugt2a3/Ephx1/Ugt2b34/Cyp4b1/Cyp4a31/Ces3a/Papss1/Acsm5/Nnmt/Gss/Cyp2r1/Comt/Cyp4a12b/Gstp1/Cyp7a1",21
+"R-MMU-2173782","Binding and Uptake of Ligands by Scavenger Receptors","8/277","31/8772",3.74654545019912e-06,0.000522643090302778,0.000482121243459835,"Jchain/Marco/Apol9a/Hp/Scarb1/Calr/Msr1/Apol9b",8
+"R-MMU-191273","Cholesterol biosynthesis","7/277","25/8772",8.55944062437444e-06,0.000955233573680187,0.0008811718874356,"Tm7sf2/Dhcr7/Nsdhl/Fdps/Cyp51/Dhcr24/Msmo1",7
+"R-MMU-114608","Platelet degranulation ","12/277","115/8772",0.000263049733978344,0.024463625259986,0.0225668982307737,"Cd9/Kng2/Orm1/Fam49b/Itih3/Gas6/Orm2/App/Actg1/Lefty2/Anxa5/Fgg",12
+"R-MMU-166663","Initial triggering of complement","5/277","20/8772",0.000317878414134515,0.0253394507267227,0.0233748187235756,"C1qb/C1qc/Cfp/C1qa/Mbl2",5
+"R-MMU-76005","Response to elevated platelet cytosolic Ca2+","12/277","120/8772",0.000390984988514868,0.0266667441610741,0.0245992037252692,"Cd9/Kng2/Orm1/Fam49b/Itih3/Gas6/Orm2/App/Actg1/Lefty2/Anxa5/Fgg",12
+"R-MMU-156580","Phase II - Conjugation of compounds","10/277","88/8772",0.000430108776791518,0.0266667441610741,0.0245992037252692,"Ugt2b1/Gstm7/Ugt2a3/Ugt2b34/Papss1/Acsm5/Nnmt/Gss/Comt/Gstp1",10
+"R-MMU-211945","Phase I - Functionalization of compounds","11/277","108/8772",0.000581489742541477,0.0324471276338144,0.0299314193792402,"Cyp4v3/Ces1d/Cyp51/Cyp4a12a/Ephx1/Cyp4b1/Cyp4a31/Ces3a/Cyp2r1/Cyp4a12b/Cyp7a1",11
+"R-MMU-166786","Creation of C4 and C2 activators","4/277","14/8772",0.000758147895932169,0.0352538771608458,0.0325205544834062,"C1qb/C1qc/C1qa/Mbl2",4
+"R-MMU-200425","Import of palmitoyl-CoA into the mitochondrial matrix","4/277","14/8772",0.000758147895932169,0.0352538771608458,0.0325205544834062,"Acaca/Acacb/Thrsp/Mid1ip1",4

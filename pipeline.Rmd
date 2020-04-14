@@ -1,0 +1,376 @@
+---
+title: "pipeline"
+author: "Oriol Nualart Mundó"
+date: "12/4/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## 1. Preparació de les dades.
+
+
+Abans que res, el primer que hem fet és descarregar els arxius .CEL i preparar l'arxiu *targets*. Aquests arxius els hem posat al subdirectori *data* del repositori.
+
+
+Llegim l'arxiu targets.csv.
+
+```{r}
+targets <- read.csv2("./data/targets.csv", header = TRUE, sep = ";")
+```
+
+
+Llegim els arxius .CEL per guardar tota la informació a l'*ExpressionSet* "rawData".
+
+```{r}
+library(oligo)
+celFiles <- list.celfiles("./data", full.names = TRUE)
+library(Biobase)
+my.targets <-read.AnnotatedDataFrame(file.path("./data","targets.csv"),
+                                     header = TRUE, row.names = 1, 
+                                     sep=";") 
+rawData <- read.celfiles(celFiles, phenoData = my.targets)
+```
+
+
+Canviem el nom llarg de les mostres pel ShotrName, més fàcil d'utilitzar.
+
+```{r}
+my.targets@data$ShortName->rownames(pData(rawData))
+colnames(rawData) <-rownames(pData(rawData))
+```
+
+
+
+## 2. Control de qualitat de les dades crues.
+
+Apliquem els controls de qualitat del paquet "arrayQualityMetrics".
+
+```{r}
+library(arrayQualityMetrics)
+arrayQualityMetrics(rawData, intgroup = c("Diet", "ShortName"))
+```
+
+
+## 3. Normalització.
+
+Utilitzem el mètode Robust Multichip Analysis per fer la correcció del soroll de fons, normalitzar i sumaritzar les dades.
+
+```{r}
+library(oligo)
+normData <- rma(rawData)
+```
+
+
+## 4. Control de qualitat de les dades normalitzades.
+
+Repetim el control de qualitat que hem fet amb el paquet "arrayQualityMetrics", aquesta vegada sobre les dades normalitzades i sumaritzades.
+
+```{r}
+arrayQualityMetrics(normData, intgroup = c("Diet", "ShortName"))
+```
+
+
+## 5. Filtratge no específic.
+
+Filtrem els gens menys variables.
+
+```{r}
+library(genefilter)
+BiocManager::install("mogene20sttranscriptcluster.db")
+library(mogene20sttranscriptcluster.db)
+annotation(normData) <- "mogene20sttranscriptcluster.db"
+filtered <- nsFilter(normData, 
+                     require.entrez = TRUE, remove.dupEntrez = TRUE,
+                     var.filter=TRUE, var.func=IQR, var.cutoff=0.75, 
+                     filterByQuantile=TRUE, feature.exclude = "^AFFX")
+print(filtered$filter.log)
+filtData <- filtered$eset
+```
+
+
+Guardem les dades un cop normalitzades i un cop filtrades.
+
+```{r}
+write.csv(exprs(normData), file="./results/normData.csv")
+write.csv(exprs(filtData), file="./results/filtData.csv")
+save(normData, filtData, file="./results/NormFiltData.Rda")
+```
+
+
+
+## 6. Identificació de gens diferencialment expressats.
+
+Generem la matriu de disseny.
+
+```{r}
+library(limma)
+designMat<- model.matrix(~0+Diet, pData(filtData))
+colnames(designMat) <- c("NC", "HFD", "CPT")
+print(designMat)
+```
+
+
+Generem la matriu de contrastos.
+
+```{r}
+contMat <- makeContrasts (NCvsCPT = CPT-NC,
+                          CPTvsHFD = HFD-CPT,
+                          NCvsHFD = HFD-NC,
+                          levels=designMat)
+print(contMat)
+```
+
+
+Apliquem els contrastos definits al paquet "limma", d'acord amb la matriu de contrastos creada. Tot seguit regularitzem la variança amb la funció "eBayes" i guardem els resultats en un arxiu.
+
+```{r}
+library(limma)
+fit<-lmFit(filtData, designMat)
+fit.main<-contrasts.fit(fit, contMat)
+fit.main<-eBayes(fit.main)
+save(fit.main, file="./results/yeast.fit.main.Rda")
+```
+
+
+Explorem els gens més diferencialment expressats en cada comparació fent servir la funció "topTable".
+
+```{r}
+top_NCvsCPT <- topTable (fit.main, number=nrow(fit.main), coef="NCvsCPT",
+                               adjust="fdr") 
+head(top_NCvsCPT)
+```
+
+
+```{r}
+top_CPTvsHFD <- topTable (fit.main, number=nrow(fit.main), coef="CPTvsHFD",
+                               adjust="fdr") 
+head(top_CPTvsHFD)
+```
+
+
+```{r}
+top_NCvsHFD <- topTable (fit.main, number=nrow(fit.main), coef="NCvsHFD", adjust="fdr") 
+head(top_NCvsHFD)
+```
+
+
+## 7. Anotació dels resultats.
+
+Basant-nos en la funció que apareix al *Case_Study_1* dels materials de l'assignatura, generem les anotacions per als tres conjunts de gens diferencialment expressats que hem obtingut.
+
+```{r}
+annotatedTopTable <- function(topTab, anotPackage)
+{
+ topTab <- cbind(PROBEID=rownames(topTab), topTab)
+ myProbes <- rownames(topTab)
+ thePackage <- eval(parse(text = anotPackage))
+ geneAnots <- select(thePackage, myProbes, c("SYMBOL", "ENTREZID", "GENENAME"))
+ annotatedTopTab<- merge(x=geneAnots, y=topTab, by.x="PROBEID", by.y="PROBEID")
+return(annotatedTopTab)
+}
+```
+
+```{r}
+annot_NCvsCPT <- annotatedTopTable(top_NCvsCPT,
+                                   anotPackage="mogene20sttranscriptcluster.db")
+annot_CPTvsHFD <- annotatedTopTable(top_CPTvsHFD,
+                                    anotPackage="mogene20sttranscriptcluster.db")
+annot_NCvsHFD <- annotatedTopTable(top_NCvsHFD,
+                                   anotPackage="mogene20sttranscriptcluster.db")
+write.csv(annot_NCvsCPT, file="./results/annot_NCvsCPT.csv")
+write.csv(annot_CPTvsHFD, file="./results/annot_CPTvsHFD.csv")
+write.csv(annot_NCvsHFD, file="./results/annot_INT.csv")
+```
+
+
+Generem volcano plots per les tres comparacions, incloent els noms dels gens amb un p-valor més baix.
+
+```{r}
+library(mogene20sttranscriptcluster.db)
+geneNames <- select(mogene20sttranscriptcluster.db, rownames(fit.main), c("GENENAME"))
+geneNames <- geneNames$GENENAME
+opt <- par(cex.lab = 0.7)
+volcanoplot(fit.main, coef=1, highlight=10, names=geneNames,
+main=paste("Gens diferencialment expressats en el contrast",
+colnames(contMat)[1], sep="\n"))
+abline(v=c(-1,1))
+par(opt)
+```
+
+
+```{r}
+opt <- par(cex.lab = 0.7)
+volcanoplot(fit.main, coef=2, highlight=10, names=geneNames,
+main=paste("Gens diferencialment expressats en el contrast",
+colnames(contMat)[2], sep="\n"))
+abline(v=c(-1,1))
+par(opt)
+```
+
+
+```{r}
+opt <- par(cex.lab = 0.7)
+volcanoplot(fit.main, coef=3, highlight=10, names=geneNames,
+main=paste("Gens diferencialment expressats en el contrast",
+colnames(contMat)[3], sep="\n"))
+abline(v=c(-1,1))
+par(opt)
+```
+
+
+Seleccionem els gens diferencialment expressats en alguna de les comparacions amb la funció "decideTests".
+
+```{r}
+library(limma)
+res <- decideTests(fit.main, method="separate", adjust.method="fdr", p.value=0.1, lfc=1)
+sum.res.rows <- apply(abs(res), 1, sum)
+res.selected <- res[sum.res.rows!=0,]
+```
+
+
+Generem un "heatmap" amb els gens que apareixen diferencialment expressats en alguna de les tres comparacions.
+
+
+```{r}
+library(gplots)
+
+genesHeatmap <- rownames(res.selected)
+heatData <- exprs(filtData)[rownames(exprs(filtData)) %in% genesHeatmap,]
+geneNames <- select(mogene20sttranscriptcluster.db, rownames(heatData), c("GENENAME"))
+GENENAMES<- geneNames$GENENAME
+rownames(heatData) <- GENENAMES
+my_palette <- colorRampPalette(c("blue3", "gold"))(n = 299)
+
+heatmap.2(heatData,
+          Rowv = TRUE,
+          Colv = TRUE,
+          dendrogram = "column",
+          main = "Gens diferencialment expressats \n FDR < 0,1, logFC >=1",
+          scale = "row",
+          col = my_palette,
+          sepcolor = "white",
+          sepwidth = c(0.05,0.05),
+          cexRow = 0.5,
+          cexCol = 0.9,
+          key = TRUE,
+          keysize = 1.5,
+          density.info = "histogram",
+          ColSideColors = c(rep("firebrick2",5), rep("dodgerblue3",5),
+                            rep("limegreen",5)),
+          tracecol = NULL,
+          srtCol = 30)
+```
+
+
+## 8. Comparació entre comparacions.
+
+Mirem quants gens diferencialment expressats hem obtingut amb cada comparació segons la selecció que hem fet.
+
+```{r}
+print(summary(res))
+```
+
+
+Fem un diagrama de Venn per veure quants gens coincideixen en expressar-se diferencialment entre les diferents comparacions.
+
+```{r}
+vennDiagram (res.selected[,1:3], cex=0.9)
+title("Gens diferencialment expressats segons cada comparació.")
+```
+
+
+## 9. Anàlisi de significació biològica.
+
+Generem el llistat d'identificadors *Entrez* a partir dels quals volem fer l'anàlisi.
+
+```{r}
+genesNCvsCPT <- top_NCvsCPT["adj.P.Val"]<0.15
+IDsNCvsCPT <- rownames(top_NCvsCPT)[genesNCvsCPT]
+EntrezNCvsCPT <- select(mogene20sttranscriptcluster.db, IDsNCvsCPT, c("ENTREZID"))
+EntrezNCvsCPT <- EntrezNCvsCPT$ENTREZID
+
+genesCPTvsHFD <- top_CPTvsHFD["adj.P.Val"]<0.15
+IDsCPTvsHFD <- rownames(top_CPTvsHFD)[genesCPTvsHFD]
+EntrezCPTvsHFD <- select(mogene20sttranscriptcluster.db, IDsCPTvsHFD, c("ENTREZID"))
+EntrezCPTvsHFD <- EntrezCPTvsHFD$ENTREZID
+
+genesNCvsHFD <- top_NCvsHFD["adj.P.Val"]<0.15
+IDsNCvsHFD <- rownames(top_NCvsHFD)[genesNCvsHFD]
+EntrezNCvsHFD <- select(mogene20sttranscriptcluster.db, IDsNCvsHFD, c("ENTREZID"))
+EntrezNCvsHFD <- EntrezNCvsHFD$ENTREZID
+
+selectedIDs <- list(EntrezNCvsCPT, EntrezCPTvsHFD, EntrezNCvsHFD)
+names(selectedIDs) <- c("NCvsCPT", "CPTvsHFD", "NCvsHFD")
+
+sapply(selectedIDs, length)
+```
+
+
+Generem una llista de tots els gens de l'array amb almenys una anotació a Gene Ontology.
+
+```{r}
+library(org.Mm.eg.db)
+mapped_genes2GO <- mappedkeys(org.Mm.egGO)
+mapped_genes2KEGG <- mappedkeys(org.Mm.egPATH)
+mapped_genes <- union(mapped_genes2GO , mapped_genes2KEGG)
+```
+
+
+Apliquem l'anàlisi de significació biològica amb la funció "enrichPathway" del paquet "ReactomePA".
+
+
+
+```{r}
+library(ReactomePA)
+
+listOfData <- selectedIDs[1:2]
+comparisonsNames <- names(listOfData)
+universe <- mapped_genes
+
+for (i in 1:length(listOfData)){
+        genesIn <- listOfData[[i]]
+        comparison <- comparisonsNames[i]
+        enrich.result <- enrichPathway(gene = genesIn,
+                                       pvalueCutoff = 0.05,
+                                       readable = T,
+                                       pAdjustMethod = "BH",
+                                       organism = "mouse",
+                                       universe = universe)
+   
+        cat("##################################")
+        cat("\nComparison: ", comparison,"\n")
+        print(head(enrich.result))
+        
+        if (length(rownames(enrich.result@result)) != 0) {
+                write.csv(as.data.frame(enrich.result), 
+                          file = paste0("./results/", "ReactomePA.Results.", comparison,
+                                        ".csv"),
+                          row.names = FALSE)
+                
+                pdf(file=paste0("./results/","ReactomePABarplot.",comparison,".pdf"))
+                print(barplot(enrich.result, showCategory = 15, font.size = 4, 
+                              title = paste0("Reactome Pathway Analysis for ",
+                                             comparison, ". Barplot")))
+                dev.off()
+                
+                pdf(file = paste0("./results/","ReactomePAcnetplot.",comparison,".pdf"))
+                print(cnetplot(enrich.result, categorySize = "geneNum",
+                               schowCategory = 15, vertex.label.cex = 0.75))
+                dev.off()
+        }
+}
+```
+
+
+
+
+
+
+
+
+
+
