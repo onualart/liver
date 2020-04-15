@@ -1,0 +1,99 @@
+---
+title: "informe"
+author: "Oriol Nualart Mundó"
+date: "15/4/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+### Enllaç al repositori GIT associat a la PAC: https://github.com/onualart/liver.git
+
+
+### Títol de l'estudi: Expression data from liver of Cyclocarya paliurus triterpenic acids treated high-fat-diet-induced mice
+
+### Identificador GEO de l'estudi: GSE125045
+
+### Enllaç a GEO: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE125045
+
+### Organisme: *Mus musculus*
+
+### Tipus d'array: Affymetrix Mouse Gene 2.0 ST Array
+
+### Identificador GEO de l'array: GPL16570 	
+
+
+
+
+
+
+## ÍNDEX
+
+
+
+
+
+
+
+## 1. Abstract.
+
+Es sap que els àcids triterpenics de la planta *Cyclocarya paliurus* (ATCP) tenen efectes beneficiosos en pacients amb esteatosi hepàtica no alcohòlica (EHNA), paliant l'estrès oxidatiu i la disfunció mitocondrial associats a aquesta malaltia. Aquest estudi utilitza microarrays per estudiar, en teixit hepàtic d'un model de ratolí, l'expressió gènica subjacent a l'EHNA i als processos relacionats amb el tractament amb ATCP.
+
+
+## 2. Objectius.
+
+Tot i que la informació que podem obtenir a partir de la pàgina de GEO no especifica els objectius concrets (l'estudi no està publicat), podem marcar-ne uns de lògics.
+
+- Identificar gens que s'expressen diferencialment entre els grups de ratolins estudiats.
+  + Per ampliar el coneixement general de la malaltia, al comparar grups de ratolins no tractats.
+  + Per estudiar l'efecte del tractament amb ATCP, al comparar un grup de ratolins sense tractament amb un grup tractat.
+
+- A partir d'aquests gens expressats diferencialment, identificar processos i "pathways" alterats en aquestes comparacions, i veure quina relació poden tenir, ja sigui directa o indirectament, amb l'estrès oxidatiu i la disfunció mitocondrial que, en principi, es veuen afectats pel tractament amb ATCP.
+
+
+## 3. Materials i mètodes.
+
+###     3.1. Disseny de l'experiment.
+
+15 ratolins van ser repartits aleatoriament en tres grups (5 per grup) corresponents als tres nivells d'un factor, d'acord amb la informació disponible:
+
+- Grup de control normal (grup NC): va rebre una dieta estàndard.
+
+- Grup de dieta alta en greixos (grup HFD): va rebre una dieta alta en greixos (sals biliars sodiques 0.5%, colesterol 2%, rovell d'ou 10%, llard 10%, dieta estàndard 77.5%, aproximadament 4016 kcal/kg, 30% de calories de greix).
+
+- Grup tractat amb ATCP (grup CPT) com a ratolins malalts tractats: va ser administrat amb ATCP (160 mg/kg) diàriament durant 8 setmanes després de rebre la dieta alta en greixos durant 12 setmanes.
+
+Els ratolins van ser sacrificats i se'n van extreure mostres de fetge per ser analitzades.
+
+Els microarrays utilitzats per fer l'anàlisi són del model Affymetrix Mouse Gene 2.0 ST Array (GSE125045). Es tracta d'arrays d'oligonucleòtids d'un color, amb sondes corresponents a fragments d'una selecció de gens de ratolí.
+
+
+###     3.2. Procediment d'anàlisi de les dades.
+
+El procediment detallat amb tot el codi de R utilitzat, juntament amb l'*output* dels fragments de codi, es poden trobar a l'arxiu "pipeline.pdf" al repositori de GitHub, generat a partir de l'arxiu de markdown "pipeline.Rmd".
+
+
+####        3.2.1. Preparació de les dades.
+
+Abans que res, el primer que hem fet és descarregar els arxius .CEL de la pàgina de GEO i preparar l'arxiu *targets*. Aquests arxius els hem posat al subdirectori *data* del repositori.
+
+A l'arxiu *targets* hem organitzat les dades, d'acord amb el disseny experimental descrit, en un factor (Diet) amb tres nivells (NC, HFD i CPT). Les 15 mostres les hem assignat als diferents nivells d'acord amb la informació disponible.
+
+A partir d'aquí hem utilitzat R per fer el tractament de les dades.
+
+La informació dels arxius .CEL l'hem passat a l'*ExpressionSet* "rawData".
+
+
+####       3.2.2. Control de qualitat de les dades crues.
+
+Per fer el control de qualitat de les dades crues hem utilitzat el paquet "arrayQualityMetrics".
+
+A destacar d'aquest 
+
+
+
+
+
