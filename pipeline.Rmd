@@ -54,6 +54,59 @@ library(arrayQualityMetrics)
 arrayQualityMetrics(rawData, intgroup = c("Diet", "ShortName"))
 ```
 
+Resum del control de qualitat. (Nota: la imatge de la taula és una captura de la pàgina html generada, ja que la funció "arrayQualityMetrics" no la crea automàticament.)
+
+```{r pressure, fig.cap="A caption", out.width = '100%'}
+knitr::include_graphics("arrayQualityMetrics report for rawData/md.png")
+```
+
+Heatmap generat pel control de qualitat:
+
+```{r pressure, fig.cap="A caption", out.width = '100%'}
+knitr::include_graphics("arrayQualityMetrics report for rawData/hm.png")
+```
+
+
+
+Per treure la mostra NC.5, refem l'arxiu targets, treiem l'arxiu .CEL corresponent de la carpeta "data" i tornem a carregar les dades.
+
+```{r}
+targets <- read.csv2("./data/targets.csv", header = TRUE, sep = ";")
+```
+
+
+```{r}
+library(oligo)
+celFiles <- list.celfiles("./data", full.names = TRUE)
+library(Biobase)
+my.targets <-read.AnnotatedDataFrame(file.path("./data","targets.csv"),
+                                     header = TRUE, row.names = 1, 
+                                     sep=";") 
+rawData <- read.celfiles(celFiles, phenoData = my.targets)
+```
+
+```{r}
+my.targets@data$ShortName->rownames(pData(rawData))
+colnames(rawData) <-rownames(pData(rawData))
+```
+
+Repetim el control de qualitat.
+
+```{r}
+arrayQualityMetrics(rawData, intgroup = c("Diet", "ShortName"), outdir = "arrayQualityMetrics report for modified rawData")
+```
+
+
+```{r pressure, fig.cap="A caption", out.width = '100%'}
+knitr::include_graphics("arrayQualityMetrics report for modified rawData/md.png")
+```
+
+```{r pressure, fig.cap="A caption", out.width = '100%'}
+knitr::include_graphics("arrayQualityMetrics report for modified rawData/hm.png")
+```
+
+
+
 
 ## 3. Normalització.
 
@@ -67,11 +120,21 @@ normData <- rma(rawData)
 
 ## 4. Control de qualitat de les dades normalitzades.
 
-Repetim el control de qualitat que hem fet amb el paquet "arrayQualityMetrics", aquesta vegada sobre les dades normalitzades i sumaritzades.
 
 ```{r}
 arrayQualityMetrics(normData, intgroup = c("Diet", "ShortName"))
 ```
+
+```{r pressure, fig.cap="A caption", out.width = '100%'}
+knitr::include_graphics("arrayQualityMetrics report for normData/md.png")
+```
+
+
+```{r pressure, fig.cap="A caption", out.width = '100%'}
+knitr::include_graphics("arrayQualityMetrics report for normData/hm.png")
+```
+
+
 
 
 ## 5. Filtratge no específic.
@@ -85,10 +148,14 @@ library(mogene20sttranscriptcluster.db)
 annotation(normData) <- "mogene20sttranscriptcluster.db"
 filtered <- nsFilter(normData, 
                      require.entrez = TRUE, remove.dupEntrez = TRUE,
-                     var.filter=TRUE, var.func=IQR, var.cutoff=0.75, 
+                     var.filter=TRUE, var.func=IQR, var.cutoff=0.5, 
                      filterByQuantile=TRUE, feature.exclude = "^AFFX")
-print(filtered$filter.log)
 filtData <- filtered$eset
+```
+
+
+```{r}
+print(filtered$filter.log)
 ```
 
 
@@ -104,36 +171,47 @@ save(normData, filtData, file="./results/NormFiltData.Rda")
 
 ## 6. Identificació de gens diferencialment expressats.
 
-Generem la matriu de disseny.
+Matriu de disseny.
 
 ```{r}
 library(limma)
 designMat<- model.matrix(~0+Diet, pData(filtData))
-colnames(designMat) <- c("NC", "HFD", "CPT")
+colnames(designMat) <- c("CPT", "HFD", "NC")
 print(designMat)
 ```
 
 
-Generem la matriu de contrastos.
+Matriu de contrastos.
 
 ```{r}
 contMat <- makeContrasts (NCvsCPT = CPT-NC,
-                          CPTvsHFD = HFD-CPT,
+                          HFDvsCPT = CPT-HFD,
                           NCvsHFD = HFD-NC,
                           levels=designMat)
 print(contMat)
 ```
 
 
-Apliquem els contrastos definits al paquet "limma", d'acord amb la matriu de contrastos creada. Tot seguit regularitzem la variança amb la funció "eBayes" i guardem els resultats en un arxiu.
+Estimem el model i els contrastos.
 
 ```{r}
 library(limma)
 fit<-lmFit(filtData, designMat)
 fit.main<-contrasts.fit(fit, contMat)
-fit.main<-eBayes(fit.main)
-save(fit.main, file="./results/yeast.fit.main.Rda")
 ```
+
+Regularitzem la variança.
+
+```{r}
+fit.main<-eBayes(fit.main)
+```
+
+Guardem els resultats en un arxiu.
+
+```{r}
+save(fit.main, file="./results/liver.fit.main.Rda")
+```
+
 
 
 Explorem els gens més diferencialment expressats en cada comparació fent servir la funció "topTable".
@@ -146,9 +224,9 @@ head(top_NCvsCPT)
 
 
 ```{r}
-top_CPTvsHFD <- topTable (fit.main, number=nrow(fit.main), coef="CPTvsHFD",
+top_HFDvsCPT <- topTable (fit.main, number=nrow(fit.main), coef="HFDvsCPT",
                                adjust="fdr") 
-head(top_CPTvsHFD)
+head(top_HFDvsCPT)
 ```
 
 
@@ -177,12 +255,12 @@ return(annotatedTopTab)
 ```{r}
 annot_NCvsCPT <- annotatedTopTable(top_NCvsCPT,
                                    anotPackage="mogene20sttranscriptcluster.db")
-annot_CPTvsHFD <- annotatedTopTable(top_CPTvsHFD,
+annot_HFDvsCPT <- annotatedTopTable(top_HFDvsCPT,
                                     anotPackage="mogene20sttranscriptcluster.db")
 annot_NCvsHFD <- annotatedTopTable(top_NCvsHFD,
                                    anotPackage="mogene20sttranscriptcluster.db")
 write.csv(annot_NCvsCPT, file="./results/annot_NCvsCPT.csv")
-write.csv(annot_CPTvsHFD, file="./results/annot_CPTvsHFD.csv")
+write.csv(annot_HFDvsCPT, file="./results/annot_HFDvsCPT.csv")
 write.csv(annot_NCvsHFD, file="./results/annot_INT.csv")
 ```
 
@@ -260,7 +338,7 @@ heatmap.2(heatData,
           keysize = 1.5,
           density.info = "histogram",
           ColSideColors = c(rep("firebrick2",5), rep("dodgerblue3",5),
-                            rep("limegreen",5)),
+                            rep("limegreen",4)),
           tracecol = NULL,
           srtCol = 30)
 ```
@@ -293,18 +371,18 @@ IDsNCvsCPT <- rownames(top_NCvsCPT)[genesNCvsCPT]
 EntrezNCvsCPT <- select(mogene20sttranscriptcluster.db, IDsNCvsCPT, c("ENTREZID"))
 EntrezNCvsCPT <- EntrezNCvsCPT$ENTREZID
 
-genesCPTvsHFD <- top_CPTvsHFD["adj.P.Val"]<0.15
-IDsCPTvsHFD <- rownames(top_CPTvsHFD)[genesCPTvsHFD]
-EntrezCPTvsHFD <- select(mogene20sttranscriptcluster.db, IDsCPTvsHFD, c("ENTREZID"))
-EntrezCPTvsHFD <- EntrezCPTvsHFD$ENTREZID
+genesHFDvsCPT <- top_HFDvsCPT["adj.P.Val"]<0.15
+IDsHFDvsCPT <- rownames(top_HFDvsCPT)[genesHFDvsCPT]
+EntrezHFDvsCPT <- select(mogene20sttranscriptcluster.db, IDsHFDvsCPT, c("ENTREZID"))
+EntrezHFDvsCPT <- EntrezHFDvsCPT$ENTREZID
 
 genesNCvsHFD <- top_NCvsHFD["adj.P.Val"]<0.15
 IDsNCvsHFD <- rownames(top_NCvsHFD)[genesNCvsHFD]
 EntrezNCvsHFD <- select(mogene20sttranscriptcluster.db, IDsNCvsHFD, c("ENTREZID"))
 EntrezNCvsHFD <- EntrezNCvsHFD$ENTREZID
 
-selectedIDs <- list(EntrezNCvsCPT, EntrezCPTvsHFD, EntrezNCvsHFD)
-names(selectedIDs) <- c("NCvsCPT", "CPTvsHFD", "NCvsHFD")
+selectedIDs <- list(EntrezNCvsCPT, EntrezHFDvsCPT, EntrezNCvsHFD)
+names(selectedIDs) <- c("NCvsCPT", "HFDvsCPT", "NCvsHFD")
 
 sapply(selectedIDs, length)
 ```
@@ -327,7 +405,7 @@ Apliquem l'anàlisi de significació biològica amb la funció "enrichPathway" d
 ```{r}
 library(ReactomePA)
 
-listOfData <- selectedIDs[1:2]
+listOfData <- selectedIDs[1:3]
 comparisonsNames <- names(listOfData)
 universe <- mapped_genes
 
