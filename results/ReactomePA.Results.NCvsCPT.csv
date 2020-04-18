@@ -1,7 +1,10 @@
 "ID","Description","GeneRatio","BgRatio","pvalue","p.adjust","qvalue","geneID","Count"
-"R-MMU-8978868","Fatty acid metabolism","22/172","169/8772",1.30764201211427e-12,7.49278872941475e-10,7.28150130956261e-10,"Acaca/Fasn/Acly/Fads2/Ehhadh/Cyp4a31/Dbi/Scd1/Cyp2u1/Elovl2/Elovl6/Cyp4a12a/Acadl/Acsf2/Acot1/Hadhb/Thrsp/Ephx2/Hacd1/Cyp4a12b/Acot2/Hacd3",22
-"R-MMU-75105","Fatty acyl-CoA biosynthesis","8/172","33/8772",1.69718695287983e-07,4.8624406200007e-05,4.72532577933383e-05,"Acaca/Fasn/Acly/Scd1/Elovl2/Elovl6/Hacd1/Hacd3",8
-"R-MMU-211945","Phase I - Functionalization of compounds","10/172","108/8772",4.77639553145082e-05,0.0089178084849017,0.00866633726189584,"Cyp4a31/Cyp2u1/Cyp2r1/Cyp4a12a/Ces3a/Ces1d/Cyp4a12b/Ephx1/Cyp39a1/Cyp7b1",10
-"R-MMU-77289","Mitochondrial Fatty Acid Beta-Oxidation","6/172","36/8772",6.22534623727867e-05,0.0089178084849017,0.00866633726189584,"Dbi/Acadl/Acsf2/Acot1/Hadhb/Acot2",6
-"R-MMU-211859","Biological oxidations","13/172","202/8772",0.000162824805484998,0.0186597227085808,0.0181335414950661,"Cyp4a31/Gstm7/Cyp2u1/Cyp2r1/Cyp4a12a/Ces3a/Ugdh/Ugt2b34/Ces1d/Cyp4a12b/Ephx1/Cyp39a1/Cyp7b1",13
-"R-MMU-211897","Cytochrome P450 - arranged by substrate type","7/172","71/8772",0.000456262553751348,0.0435730738832537,0.0423443668306075,"Cyp4a31/Cyp2u1/Cyp2r1/Cyp4a12a/Cyp4a12b/Cyp39a1/Cyp7b1",7
+"R-MMU-8978868","Fatty acid metabolism","29/314","169/8772",1.25924773064148e-12,9.30584072944051e-10,9.10634937842836e-10,"Acaca/Fasn/Acly/Fads2/Ehhadh/Cyp4a31/Dbi/Scd1/Cyp2u1/Elovl2/Elovl6/Cyp4a12a/Acadl/Acsf2/Acot1/Hadhb/Thrsp/Ephx2/Hacd1/Cyp4a12b/Acot2/Hacd3/Cpt1a/Mid1ip1/Cyp4f14/Decr2/Cyp4a14/Acox1/Hadha",29
+"R-MMU-211945","Phase I - Functionalization of compounds","18/314","108/8772",4.28316043795253e-08,1.58262778182346e-05,1.54870064256494e-05,"Cyp4a31/Cyp2u1/Cyp2r1/Cyp4a12a/Ces3a/Ces1d/Cyp4a12b/Ephx1/Cyp39a1/Cyp7b1/Cyb5r3/Aldh1b1/Cyp4f14/Cyp3a44/Cyp4v3/Cyp4a14/Hsp90ab1/Adh4",18
+"R-MMU-211859","Biological oxidations","23/314","202/8772",8.12060703683636e-07,0.000200037620007402,0.000195749369624792,"Cyp4a31/Gstm7/Cyp2u1/Cyp2r1/Cyp4a12a/Ces3a/Ugdh/Ugt2b34/Ces1d/Cyp4a12b/Ephx1/Cyp39a1/Cyp7b1/Cyb5r3/Aldh1b1/Acsm5/Gclc/Cyp4f14/Cyp3a44/Cyp4v3/Cyp4a14/Hsp90ab1/Adh4",23
+"R-MMU-75105","Fatty acyl-CoA biosynthesis","8/314","33/8772",1.56503368251564e-05,0.00289139972844764,0.00282941615760064,"Acaca/Fasn/Acly/Scd1/Elovl2/Elovl6/Hacd1/Hacd3",8
+"R-MMU-211958","Miscellaneous substrates","7/314","26/8772",2.57536145263614e-05,0.00380638422699621,0.00372478593254953,"Cyp4a31/Cyp2u1/Cyp4a12a/Cyp4a12b/Cyp4f14/Cyp3a44/Cyp4a14",7
+"R-MMU-211897","Cytochrome P450 - arranged by substrate type","11/314","71/8772",3.89468184635835e-05,0.00479694980743136,0.00469411654113717,"Cyp4a31/Cyp2u1/Cyp2r1/Cyp4a12a/Cyp4a12b/Cyp39a1/Cyp7b1/Cyp4f14/Cyp3a44/Cyp4v3/Cyp4a14",11
+"R-MMU-211979","Eicosanoids","5/314","16/8772",0.000179550117593002,0.0189553624144612,0.0185490121483297,"Cyp4a31/Cyp4a12a/Cyp4a12b/Cyp4f14/Cyp4a14",5
+"R-MMU-77289","Mitochondrial Fatty Acid Beta-Oxidation","7/314","36/8772",0.000240179132097278,0.022186547327486,0.0217109294408987,"Dbi/Acadl/Acsf2/Acot1/Hadhb/Acot2/Hadha",7
+"R-MMU-211935","Fatty acids","5/314","20/8772",0.000566350082395664,0.0465036345433773,0.0455067259188095,"Cyp4a31/Cyp4a12a/Cyp4a12b/Cyp4f14/Cyp4a14",5

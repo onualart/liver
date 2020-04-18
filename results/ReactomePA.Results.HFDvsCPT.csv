@@ -1,2 +1,10 @@
 "ID","Description","GeneRatio","BgRatio","pvalue","p.adjust","qvalue","geneID","Count"
-"R-MMU-390471","Association of TriC/CCT with target proteins during biosynthesis","2/21","10/8772",0.000242825364707764,0.0410374866356121,0.0393632696473638,"Cct3/Cct4",2
+"R-MMU-390471","Association of TriC/CCT with target proteins during biosynthesis","5/253","10/8772",4.29534044549994e-06,0.00274042720422896,0.00269023954218154,"Cct3/Cct4/Cct2/Cct5/Tcp1",5
+"R-MMU-199977","ER to Golgi Anterograde Transport","14/253","145/8772",7.21126380970645e-05,0.0230039315529636,0.0225826419303965,"Sec24d/Kdelr2/Cnih1/Arf4/Sptbn1/Sec16a/Sec24c/Tgfa/Mcfd2/Dctn4/Stx5a/Copb1/Arfgap2/Tfg",14
+"R-MMU-425410","Metal ion SLC transporters","5/253","21/8772",0.000267227467694735,0.037124982490261,0.0364450826294429,"Slc39a14/Slc30a5/Slc39a1/Slc41a2/Slc39a7",5
+"R-MMU-435354","Zinc transporters","4/253","12/8772",0.000278643160348527,0.037124982490261,0.0364450826294429,"Slc39a14/Slc30a5/Slc39a1/Slc39a7",4
+"R-MMU-5694530","Cargo concentration in the ER","6/253","33/8772",0.000312092594402262,0.037124982490261,0.0364450826294429,"Sec24d/Cnih1/Sec24c/Tgfa/Mcfd2/Stx5a",6
+"R-MMU-5620922","BBSome-mediated cargo-targeting to cilium","5/253","23/8772",0.000421506714960778,0.037124982490261,0.0364450826294429,"Cct3/Cct4/Cct2/Cct5/Tcp1",5
+"R-MMU-948021","Transport to the Golgi and subsequent modification","14/253","173/8772",0.000464078709864363,0.037124982490261,0.0364450826294429,"Sec24d/Kdelr2/Cnih1/Arf4/Sptbn1/Sec16a/Sec24c/Tgfa/Mcfd2/Dctn4/Stx5a/Copb1/Arfgap2/Tfg",14
+"R-MMU-446203","Asparagine N-linked glycosylation","18/253","258/8772",0.000465517021821455,0.037124982490261,0.0364450826294429,"Dpagt1/Sec24d/Kdelr2/Cnih1/Arf4/Sptbn1/Sec16a/Sec24c/Alg8/Tgfa/Mcfd2/Ctsa/Dctn4/Stx5a/Copb1/Arfgap2/Gne/Tfg",18
+"R-MMU-204005","COPII-mediated vesicle transport","8/253","67/8772",0.000641664508833496,0.0454868840706411,0.0446538459363661,"Sec24d/Cnih1/Sec16a/Sec24c/Tgfa/Mcfd2/Stx5a/Tfg",8

@@ -143,7 +143,6 @@ Filtrem els gens menys variables.
 
 ```{r}
 library(genefilter)
-BiocManager::install("mogene20sttranscriptcluster.db")
 library(mogene20sttranscriptcluster.db)
 annotation(normData) <- "mogene20sttranscriptcluster.db"
 filtered <- nsFilter(normData, 
@@ -184,23 +183,30 @@ print(designMat)
 Matriu de contrastos.
 
 ```{r}
-contMat <- makeContrasts (NCvsCPT = CPT-NC,
-                          HFDvsCPT = CPT-HFD,
+contMat <- makeContrasts (HFDvsCPT = CPT-HFD,
                           NCvsHFD = HFD-NC,
+                          NCvsCPT = CPT-NC,
                           levels=designMat)
 print(contMat)
 ```
 
 
-Estimem el model i els contrastos.
+Estimació del model.
 
 ```{r}
 library(limma)
 fit<-lmFit(filtData, designMat)
+```
+
+
+Estimació dels contrastos.
+
+```{r}
 fit.main<-contrasts.fit(fit, contMat)
 ```
 
-Regularitzem la variança.
+
+Regularització de la variança.
 
 ```{r}
 fit.main<-eBayes(fit.main)
@@ -213,15 +219,7 @@ save(fit.main, file="./results/liver.fit.main.Rda")
 ```
 
 
-
-Explorem els gens més diferencialment expressats en cada comparació fent servir la funció "topTable".
-
-```{r}
-top_NCvsCPT <- topTable (fit.main, number=nrow(fit.main), coef="NCvsCPT",
-                               adjust="fdr") 
-head(top_NCvsCPT)
-```
-
+Exploració dels gens més diferencialment expressats en cada comparació.
 
 ```{r}
 top_HFDvsCPT <- topTable (fit.main, number=nrow(fit.main), coef="HFDvsCPT",
@@ -236,9 +234,16 @@ head(top_NCvsHFD)
 ```
 
 
+```{r}
+top_NCvsCPT <- topTable (fit.main, number=nrow(fit.main), coef="NCvsCPT",
+                               adjust="fdr") 
+head(top_NCvsCPT)
+```
+
+
 ## 7. Anotació dels resultats.
 
-Basant-nos en la funció que apareix al *Case_Study_1* dels materials de l'assignatura, generem les anotacions per als tres conjunts de gens diferencialment expressats que hem obtingut.
+Funció *annotatedTopTable*.
 
 ```{r}
 annotatedTopTable <- function(topTab, anotPackage)
@@ -252,26 +257,39 @@ return(annotatedTopTab)
 }
 ```
 
+
+Generació de les anotacions.
+
 ```{r}
-annot_NCvsCPT <- annotatedTopTable(top_NCvsCPT,
-                                   anotPackage="mogene20sttranscriptcluster.db")
+library(mogene20sttranscriptcluster.db)
+
 annot_HFDvsCPT <- annotatedTopTable(top_HFDvsCPT,
                                     anotPackage="mogene20sttranscriptcluster.db")
 annot_NCvsHFD <- annotatedTopTable(top_NCvsHFD,
                                    anotPackage="mogene20sttranscriptcluster.db")
-write.csv(annot_NCvsCPT, file="./results/annot_NCvsCPT.csv")
+annot_NCvsCPT <- annotatedTopTable(top_NCvsCPT,
+                                   anotPackage="mogene20sttranscriptcluster.db")
+```
+
+Guardem els *data frames* obtinguts en arxius .csv.
+
+```{r}
 write.csv(annot_HFDvsCPT, file="./results/annot_HFDvsCPT.csv")
 write.csv(annot_NCvsHFD, file="./results/annot_INT.csv")
+write.csv(annot_NCvsCPT, file="./results/annot_NCvsCPT.csv")
 ```
 
 
-Generem volcano plots per les tres comparacions, incloent els noms dels gens amb un p-valor més baix.
+Volcano plots.
 
 ```{r}
-library(mogene20sttranscriptcluster.db)
 geneNames <- select(mogene20sttranscriptcluster.db, rownames(fit.main), c("GENENAME"))
 geneNames <- geneNames$GENENAME
 opt <- par(cex.lab = 0.7)
+```
+
+
+```{r}
 volcanoplot(fit.main, coef=1, highlight=10, names=geneNames,
 main=paste("Gens diferencialment expressats en el contrast",
 colnames(contMat)[1], sep="\n"))
@@ -281,7 +299,6 @@ par(opt)
 
 
 ```{r}
-opt <- par(cex.lab = 0.7)
 volcanoplot(fit.main, coef=2, highlight=10, names=geneNames,
 main=paste("Gens diferencialment expressats en el contrast",
 colnames(contMat)[2], sep="\n"))
@@ -291,7 +308,6 @@ par(opt)
 
 
 ```{r}
-opt <- par(cex.lab = 0.7)
 volcanoplot(fit.main, coef=3, highlight=10, names=geneNames,
 main=paste("Gens diferencialment expressats en el contrast",
 colnames(contMat)[3], sep="\n"))
@@ -300,18 +316,17 @@ par(opt)
 ```
 
 
-Seleccionem els gens diferencialment expressats en alguna de les comparacions amb la funció "decideTests".
+Selecció dels gens diferencialment expressats.
 
 ```{r}
 library(limma)
-res <- decideTests(fit.main, method="separate", adjust.method="fdr", p.value=0.1, lfc=1)
+res <- decideTests(fit.main, method="separate", adjust.method="fdr", p.value=0.1, lfc=0.75)
 sum.res.rows <- apply(abs(res), 1, sum)
 res.selected <- res[sum.res.rows!=0,]
 ```
 
 
-Generem un "heatmap" amb els gens que apareixen diferencialment expressats en alguna de les tres comparacions.
-
+*Heatmap*
 
 ```{r}
 library(gplots)
@@ -322,12 +337,14 @@ geneNames <- select(mogene20sttranscriptcluster.db, rownames(heatData), c("GENEN
 GENENAMES<- geneNames$GENENAME
 rownames(heatData) <- GENENAMES
 my_palette <- colorRampPalette(c("blue3", "gold"))(n = 299)
+```
 
+```{r}
 heatmap.2(heatData,
           Rowv = TRUE,
           Colv = TRUE,
           dendrogram = "column",
-          main = "Gens diferencialment expressats \n FDR < 0,1, logFC >=1",
+          main = "Gens diferencialment expressats \n FDR < 0,1, logFC >=0.75",
           scale = "row",
           col = my_palette,
           sepcolor = "white",
@@ -337,8 +354,8 @@ heatmap.2(heatData,
           key = TRUE,
           keysize = 1.5,
           density.info = "histogram",
-          ColSideColors = c(rep("firebrick2",5), rep("dodgerblue3",5),
-                            rep("limegreen",4)),
+          ColSideColors = c(rep("firebrick2",4), rep("dodgerblue3",5),
+                            rep("limegreen",5)),
           tracecol = NULL,
           srtCol = 30)
 ```
@@ -346,14 +363,14 @@ heatmap.2(heatData,
 
 ## 8. Comparació entre comparacions.
 
-Mirem quants gens diferencialment expressats hem obtingut amb cada comparació segons la selecció que hem fet.
+Número de gens diferencialment expressats en cada comparació.
 
 ```{r}
 print(summary(res))
 ```
 
 
-Fem un diagrama de Venn per veure quants gens coincideixen en expressar-se diferencialment entre les diferents comparacions.
+Diagrama de Venn.
 
 ```{r}
 vennDiagram (res.selected[,1:3], cex=0.9)
@@ -363,32 +380,34 @@ title("Gens diferencialment expressats segons cada comparació.")
 
 ## 9. Anàlisi de significació biològica.
 
-Generem el llistat d'identificadors *Entrez* a partir dels quals volem fer l'anàlisi.
+Generació del llistat d'identificadors *Entrez*.
 
 ```{r}
-genesNCvsCPT <- top_NCvsCPT["adj.P.Val"]<0.15
-IDsNCvsCPT <- rownames(top_NCvsCPT)[genesNCvsCPT]
-EntrezNCvsCPT <- select(mogene20sttranscriptcluster.db, IDsNCvsCPT, c("ENTREZID"))
-EntrezNCvsCPT <- EntrezNCvsCPT$ENTREZID
-
-genesHFDvsCPT <- top_HFDvsCPT["adj.P.Val"]<0.15
+genesHFDvsCPT <- top_HFDvsCPT["adj.P.Val"]<0.25
 IDsHFDvsCPT <- rownames(top_HFDvsCPT)[genesHFDvsCPT]
 EntrezHFDvsCPT <- select(mogene20sttranscriptcluster.db, IDsHFDvsCPT, c("ENTREZID"))
 EntrezHFDvsCPT <- EntrezHFDvsCPT$ENTREZID
 
-genesNCvsHFD <- top_NCvsHFD["adj.P.Val"]<0.15
+genesNCvsHFD <- top_NCvsHFD["adj.P.Val"]<0.25
 IDsNCvsHFD <- rownames(top_NCvsHFD)[genesNCvsHFD]
 EntrezNCvsHFD <- select(mogene20sttranscriptcluster.db, IDsNCvsHFD, c("ENTREZID"))
 EntrezNCvsHFD <- EntrezNCvsHFD$ENTREZID
 
-selectedIDs <- list(EntrezNCvsCPT, EntrezHFDvsCPT, EntrezNCvsHFD)
-names(selectedIDs) <- c("NCvsCPT", "HFDvsCPT", "NCvsHFD")
+genesNCvsCPT <- top_NCvsCPT["adj.P.Val"]<0.25
+IDsNCvsCPT <- rownames(top_NCvsCPT)[genesNCvsCPT]
+EntrezNCvsCPT <- select(mogene20sttranscriptcluster.db, IDsNCvsCPT, c("ENTREZID"))
+EntrezNCvsCPT <- EntrezNCvsCPT$ENTREZID
 
+selectedIDs <- list(EntrezHFDvsCPT, EntrezNCvsHFD, EntrezNCvsCPT)
+names(selectedIDs) <- c("HFDvsCPT", "NCvsHFD", "NCvsCPT")
+```
+
+```{r}
 sapply(selectedIDs, length)
 ```
 
 
-Generem una llista de tots els gens de l'array amb almenys una anotació a Gene Ontology.
+Genergeneració de la llista dels gens de ratolí amb anotacions a GO i a KEGG.
 
 ```{r}
 library(org.Mm.eg.db)
@@ -398,13 +417,10 @@ mapped_genes <- union(mapped_genes2GO , mapped_genes2KEGG)
 ```
 
 
-Apliquem l'anàlisi de significació biològica amb la funció "enrichPathway" del paquet "ReactomePA".
-
-
+Anàlisi de significació biològica.
 
 ```{r}
 library(ReactomePA)
-
 listOfData <- selectedIDs[1:3]
 comparisonsNames <- names(listOfData)
 universe <- mapped_genes

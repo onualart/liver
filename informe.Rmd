@@ -2,7 +2,10 @@
 title: "informe"
 author: "Oriol Nualart Mundó"
 date: "15/4/2020"
-output: pdf_document
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -174,7 +177,20 @@ Guardem les dades normalitzades i les dades filtrades en arxius a la carpeta *re
 
 ####      3.2.6. Identificació de gens diferencialment expressats.
 
-Per identificar els gens diferencialment expressats, primer hem de crear les matrius de disseny i de contrastos.
+Per identificar els gens diferencialment expressats, primer hem de definir el model i crear les matrius de disseny i de contrastos.
+
+El nostre és un model lineal amb un factor,
+
+$Y = X\alpha + \epsilon$
+
+on *X* és la matriu de disseny.
+
+Els contrastos vénen definits com
+
+$\beta = C\alpha$
+
+on *C* és la matriu de contrastos.
+
 
 La funció *model.matrix* del paquet *limma* ens genera fàcilment la matriu de disseny a partir de les nostres dades.
 
@@ -188,27 +204,178 @@ print(designMat)
 
 De cara a decidir quins contrastos farem per analitzar les dades, ens centrarem en els objectius que hem marcat.
 
-El contrast que pot ser més rellevant és entre el grup de dieta alta en greixos (HFD) i el grup de tractament (CPT), ja que és el que ens dóna informació directa sobre l'efecte del tractament.
+La comparació que pot ser més interessant és entre el grup de dieta alta en greixos (HFD) i el grup de tractament (CPT), ja que és la que ens dóna informació directa sobre l'efecte del tractament.
 
 El contrast entre el grup de dieta estàndard (NC) i el grup de dieta alta en greixos (HFD) no ens diu res sobre l'efecte del tractament, però sí que ens aporta informació sobre l'alteració de base.
 
-El tercer contrast possible, entre el grup de dieta estàndard (NC) i el grup de dieta alta en greixos i amb tractament (CPT), en principi és el menys rellevant ja que, malgrat que els dos grups els hem posat en un mateix factor, en realitat ens està donant informació conjunta de dos factors diferents: la dieta i el tractament. Tot i que  analitzar dos factors conjuntament no ens dona per sí sol informació útil, sí que ens pot ajudar a entendre la interacció entre els dos factors, de manera que aquesta comparació també la inclourem a l'anàlisi.
+El tercer contrast possible, entre el grup de dieta estàndard (NC) i el grup de dieta alta en greixos i amb tractament (CPT), en principi és el menys rellevant ja que, malgrat que els dos grups els hem posat com a nivells d'un mateix factor, en el fons ens està donant informació conjunta de dos "factors" diferents: la dieta i el tractament. Tot i que  analitzar dos factors conjuntament no ens dona per sí sol informació útil, sí que pot ajudar a entendre la interacció entre els dos factors, de manera que aquesta comparació també la inclourem a l'anàlisi.
 
 Amb els contrastos decidits, generem la matriu amb la funció *makeContrasts* del paquet *limma*.
 
 ```{r, echo = FALSE}
-contMat <- makeContrasts (NCvsCPT = CPT-NC,
-                          HFDvsCPT = CPT-HFD,
+contMat <- makeContrasts (HFDvsCPT = CPT-HFD,
                           NCvsHFD = HFD-NC,
+                          NCvsCPT = CPT-NC,
                           levels=designMat)
 print(contMat)
 ```
 
 
-Estimem el model amb la funció *lmFit* del paquet *limma*. En cada grup definit a la matriu de disseny, calculem el model per cada gen a partir dels valors d'expressió de les diferents mostres del grup. 
+Estimem el model amb la funció *lmFit* del paquet *limma*: en cada grup definit a la matriu de disseny, calculem els paràmetres del model per a cada gen a partir dels valors d'expressió de les diferents mostres del grup. La funció *lmfit* utilitza per defecte el mètode de mínims quadrats per fer aquest càlcul.
+
+Amb els paràmetres del model calculats i amb la matriu de contrastos, estimem els diferents contrastos amb la funció *contrasts.fit*. 
+
+Utilitzant la funció *eBayes*, calculem per a cada gen i comparació una sèrie d'estadístics que ens ajudaran a decidir quins gens podem considerar que estan diferencialment expressats i quins no.
+
+Obtenim per a cada comparació un llistat de gens associat a una sèrie de valors, entre ells el *fold-change* i el p-valor per a aquell gen i comparació. Per controlar el número de falsos positius deguts a l'elevat número de tests, aquesta funció també calcula p-valors ajustats mitjançant el mètode de Benjamini i Hochberg.
+
+Finalment guardem els resultats a l'arxiu "liver.fit.main.Rda".
 
 
-Tot seguit regularitzem la variança amb la funció *eBayes* i guardem els resultats en un arxiu.
+Per fer una primera visualització d'algunes de les dades obtingudes, explorem amb la funció *topTable* els gens amb un p-valor més petit, dintre de les diferents comparacions.
+
+
+HFDvsCPT:
+
+```{r, echo = FALSE}
+top_HFDvsCPT <- topTable (fit.main, number=nrow(fit.main), coef="HFDvsCPT",
+                               adjust="fdr") 
+head(top_HFDvsCPT)
+```
+
+
+NCvsHFD
+
+```{r, echo = FALSE}
+top_NCvsHFD <- topTable (fit.main, number=nrow(fit.main), coef="NCvsHFD", adjust="fdr") 
+head(top_NCvsHFD)
+```
+
+NCvsCPT:
+
+```{r, echo = FALSE}
+top_NCvsCPT <- topTable (fit.main, number=nrow(fit.main), coef="NCvsCPT",
+                               adjust="fdr") 
+head(top_NCvsCPT)
+```
+
+A destacar d'aquests resultats preliminars, els valors força elevats dels p-valors ajustats en el contrast HFDvsCPT, cosa que indicaria que els dos grups es diferencien relativament poc.
+
+
+####      3.2.7. Anotació dels resultats.
+
+Basant-nos en la funció *annotatedTopTable* que apareix al *Case_Study_1* dels materials de l'assignatura, generem les anotacions per als tres conjunts de gens diferencialment expressats que hem obtingut.
+
+El que fa la funció és associar els gens que tenim en els *data frames* obtinguts en els últims passos amb les anotacions disponibles per a aquests gens, que treiem del paquet d'anotacions corresponent al microarray utilitzat. Concretament, agafa els paràmetres "SYMBOL", "ENTREZID" i "GENENAME", que ens seran útils en els següents passos del nostre procediment d'anàlisi.
+
+Els *data frames* obtinguts els guardem en arxius .csv.
+
+
+Per tenir una nova visualització de les dades un cop anotades, generem volcano plots per les tres comparacions, incloent els noms dels gens amb un p-valor més baix.
+
+El volcano plot ens dóna una idea de com es distribueixen els gens pel que fa al *fold-change*, que ens indica les diferències d'expressió, i pel que fa al p-valor, que ens indica el grau de significació estadística d'aquestes diferències.
+
+```{r, echo = FALSE}
+volcanoplot(fit.main, coef=1, highlight=10, names=geneNames,
+main=paste("Gens diferencialment expressats en el contrast",
+colnames(contMat)[1], sep="\n"))
+abline(v=c(-1,1))
+par(opt)
+```
+
+
+```{r, echo = FALSE}
+volcanoplot(fit.main, coef=2, highlight=10, names=geneNames,
+main=paste("Gens diferencialment expressats en el contrast",
+colnames(contMat)[2], sep="\n"))
+abline(v=c(-1,1))
+par(opt)
+```
+
+
+```{r, echo = FALSE}
+volcanoplot(fit.main, coef=3, highlight=10, names=geneNames,
+main=paste("Gens diferencialment expressats en el contrast",
+colnames(contMat)[3], sep="\n"))
+abline(v=c(-1,1))
+par(opt)
+```
+
+
+Els volcano plots ens confirmen la impressió que el contrast HFDvsCPT mostra poca diferència entre els dos grups, havent-hi pocs gens amb un p-valor baix i un *fold-change* destacable.
+
+
+Passem a seleccionar els gens diferencialment expressats en alguna de les comparacions. La funció *decideTests* ho fa, a partir de les estimacions dels nostres contrastos, agafant els gens que tenen un p-valor per sota d'un determinat número i un valor absolut del Log2 del *fold-change* per sobre d'un altre número. En el nostre cas hem utilitzat un límit de 0,1 per al p-valor i de 0.75 per al Log2 del *fold-change*.
+
+
+Podem fer una ullada general al nivell d'expressió dels gens seleccionats amb un *heatmap*.
+
+```{r, echo = FALSE}
+heatmap.2(heatData,
+          Rowv = TRUE,
+          Colv = TRUE,
+          dendrogram = "column",
+          main = "Gens diferencialment expressats \n FDR < 0,1, logFC >=0.75",
+          scale = "row",
+          col = my_palette,
+          sepcolor = "white",
+          sepwidth = c(0.05,0.05),
+          cexRow = 0.5,
+          cexCol = 0.9,
+          key = TRUE,
+          keysize = 2,
+          density.info = "histogram",
+          ColSideColors = c(rep("firebrick2",4), rep("dodgerblue3",5),
+                            rep("limegreen",5)),
+          tracecol = NULL,
+          srtCol = 30)
+```
+
+Hem indicat que les mostres s'ajuntin per semblança entre files i entre columnes. Observem que els tres grups experimentals s'han separat correctament, i és especialment visible la diferència entre el nivell d'expressió dels gens del grup NC i el dels altres dos grups.
+
+
+####      3.2.8. Comparació entre comparacions.
+
+Mirem quants gens diferencialment expressats hem obtingut amb cada contrast segons la selecció que hem fet.
+
+```{r, echo = FALSE}
+print(summary(res))
+```
+
+Com ja ens anunciaven les visualitzacions preliminars, la comparació entre els grups CPT i HFD és amb diferència la que detecta menys gens diferencialment expressats, essent el grup NC el més diferent dels altres dos.
+
+Fem un diagrama de Venn per veure quants gens coincideixen a expressar-se diferencialment entre les diferents comparacions.
+
+```{r, echo = FALSE}
+vennDiagram (res.selected[,1:3], cex=0.9)
+title("Gens diferencialment expressats segons cada comparació.")
+```
+
+
+Veiem que els dos contrastos amb major número de gens diferencialment expressats, NCvsHFD i NCvsCPT, comparteixen un número important de gens. Tots els contrastos tenen en comú amb altres contrastos aproximadament la meitat dels gens que han detectat.
+
+
+####      3.2.9. Anàlisi de significació biològica.
+
+Per fer l'anàlisi de significació biològica, primer generem el llistat d'identificadors *Entrez* a partir dels quals volem fer l'anàlisi.
+
+Fem servir la funció *select* per agafar de cada comparació els gens amb valors més significatius d'expressió diferencial i associar-los amb els seus respectius identificadors *Entrez*.
+
+Per tal d'obtenir uns llistats de gens extens, hem optat per fer servir un llindar de p-valor ajustat molt poc restrictiu, de 0,25.
+
+Podem fer-nos una idea de la mida d'aquestes llistes mirant quants gens inclouen.
+
+```{r, echo = FALSE}
+sapply(selectedIDs, length)
+```
+
+
+Després generem una llista de tots els gens de ratolí coneguts amb almenys una anotació de Gene Ontology o de KEGG. La funció *mappedkeys* del paquet *AnnotationDbi* s'encarrega de seleccionar les anotacions a partir del paquet d'anotacions del genoma complet de ratolí: *org.Mm.eg.db*.
+
+Finalment, a partir de les llistes que hem generat, apliquem l'anàlisi de significació biològica mitjançant la funció *enrichPathway* del paquet *ReactomePA*.
+
+
+
 
 
 
