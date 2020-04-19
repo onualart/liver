@@ -2,10 +2,7 @@
 title: "informe"
 author: "Oriol Nualart Mundó"
 date: "15/4/2020"
-output:
-  html_document:
-    df_print: paged
-  pdf_document: default
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -48,13 +45,13 @@ Es sap que els àcids triterpenics de la planta *Cyclocarya paliurus* (ATCP) ten
 
 ## 2. Objectius.
 
-Tot i que la informació que podem obtenir a partir de la pàgina de GEO no especifica els objectius concrets (l'estudi no està publicat), podem marcar-ne uns de lògics.
+Tot i que la informació que podem obtenir a partir de la pàgina de GEO no especifica els objectius concrets (l'estudi no està publicat), sabem que és un experiment de tipus "perfil d'expressió". Podem marcar uns objectius lògics.
 
 - Identificar gens que s'expressen diferencialment entre els grups de ratolins estudiats.
-  + Per ampliar el coneixement general de la malaltia, al comparar grups de ratolins no tractats.
+  + Per ampliar el coneixement general dels processos subjacents als símptomes de la malaltia, al comparar grups de ratolins no tractats.
   + Per estudiar l'efecte del tractament amb ATCP, al comparar ratolins sense tractament amb ratolins tractats.
 
-- A partir d'aquests gens expressats diferencialment, identificar processos i "pathways" alterats en aquestes comparacions, i veure quina relació poden tenir, ja sigui directa o indirectament, amb l'estrès oxidatiu i la disfunció mitocondrial que, en principi, es veuen afectats pel tractament amb ATCP.
+- A partir d'aquests gens expressats diferencialment, identificar processos i *pathways* alterats en aquestes comparacions, i veure quina relació poden tenir, ja sigui directa o indirectament, amb els coneixements previs que tenim de la malaltia i del tractament.
 
 
 ## 3. Materials i mètodes.
@@ -69,24 +66,21 @@ D'acord amb la informació disponible, 15 ratolins van ser repartits aleatoriame
 
 - Grup tractat amb ATCP (grup CPT): va ser administrat amb ATCP (160 mg/kg) diàriament durant 8 setmanes després de rebre la dieta alta en greixos durant 12 setmanes.
 
-Convé notar que l'experiment s'hauria pogut plantejar de forma diferent: es podrien haver creat dos factors, la dieta i el tractament, cada un amb dos nivells (dieta estàndard / alta en greixos, i tractament / absència de tractament). És de suposar que es descartés el grup de dieta estàndard amb tractament per irrellevant, tot i que crec que hauria pogut ser útil per estudiar la interacció entre els dos factors.
-
-
-Després d'haver rebut la dieta i tractament corresponents al seu grup durant el període establert, els ratolins van ser sacrificats i se'n van extreure mostres de fetge per ser analitzades.
+Els ratolins van ser sacrificats i se'n van extreure mostres de fetge per ser analitzades.
 
 Els microarrays utilitzats per fer l'anàlisi són del model Affymetrix Mouse Gene 2.0 ST Array (GPL16570). Es tracta d'arrays d'oligonucleòtids d'un color, amb sondes corresponents a fragments d'una selecció de gens de ratolí.
 
 
 ###     3.2. Procediment d'anàlisi de les dades.
 
-El procediment detallat amb tot el codi de R utilitzat, juntament amb l'*output* dels fragments de codi, es pot trobar a l'arxiu "pipeline.pdf" al repositori de GitHub, generat a partir de l'arxiu de markdown "pipeline.Rmd".
+El procediment detallat amb tot el codi de R utilitzat, juntament amb l'*output* dels fragments de codi, es pot trobar a l'arxiu "pipeline.pdf" al repositori de GitHub, generat a partir de l'arxiu de markdown "pipeline.Rmd". El codi pressuposa tenir instal·lats tots els paquets necessaris, inclosos els paquets d'anotacions *mogene20sttranscriptcluster.db* i *org.Mm.eg.db*.
 
 
 ####        3.2.1. Preparació de les dades.
 
 Abans que res, el primer que hem fet és descarregar els arxius .CEL de la pàgina de GEO i preparar l'arxiu *targets*. Aquests arxius els hem posat al subdirectori *data* del repositori.
 
-A l'arxiu *targets* hem organitzat les dades, d'acord amb el disseny experimental descrit, en un factor (Diet) amb tres nivells (NC, HFD i CPT). Les 15 mostres les hem assignat als diferents nivells d'acord amb la informació disponible.
+A l'arxiu *targets* hem organitzat les dades, d'acord amb el disseny experimental descrit, en un factor (*Diet*) amb tres nivells (NC, HFD i CPT). Les 15 mostres les hem assignat als diferents nivells d'acord amb la informació disponible.
 
 A partir d'aquí hem utilitzat R per fer el tractament de les dades.
 
@@ -98,17 +92,13 @@ Hem carregat l'arxiu *targets*, i la informació dels arxius .CEL l'hem passat a
 Per fer el control de qualitat de les dades crues hem utilitzat el paquet *arrayQualityMetrics*, que genera un informe molt complet.
 
 
-```{r pressure, echo=FALSE, fig.cap="A caption", out.width = '100%'}
-knitr::include_graphics("arrayQualityMetrics report for rawData/md.png")
-```
+![Taula resum del control de qualitat de les dades crues](extra_pics/mdRaw.png)
 
 
 Al resum del control de qualitat comprovem que es detecten alguns *outliers*, especialment a la mostra NC.5.
 
 
-```{r pressure, echo=FALSE, fig.cap="A caption", out.width = '100%'}
-knitr::include_graphics("arrayQualityMetrics report for rawData/hm.png")
-```
+![Heatmap de les dades crues](qcRaw/hm.png)
 
 
 Al *heatmap*, per exemple, es veu clarament que aquesta mostra (corresponent a la primera columna/última fila) es diferencia de la resta.
@@ -117,15 +107,13 @@ Tenint en compte que es tracta d'una mostra del grup control, del qual no espera
 
 Un cop tretes les dades de la mostra, repetim el control de qualitat.
 
-```{r pressure, echo=FALSE, fig.cap="A caption", out.width = '100%'}
-knitr::include_graphics("arrayQualityMetrics report for modified rawData/md.png")
-```
+
+![Taula resum del control de qualitat de les dades havent tret la mostra NC.5](extra_pics/mdMod.png)
+
 
 Observem que ara no hi ha cap mostra amb més d'un marcador d'*outliers*.
 
-```{r pressure, echo=FALSE, fig.cap="A caption", out.width = '100%'}
-knitr::include_graphics("arrayQualityMetrics report for modified rawData/hm.png")
-```
+![Heatmap de les dades sense NC.5](qcMod/hm.png)
 
 El *heatmap* és ara més uniforme, només la mostra CPT.1 és detectada com a *outlier* però no es visualitza una diferència tan destacada.
 
@@ -141,17 +129,14 @@ Un cop realitzat el procés, les dades queden guardades a *normData*, un *Expres
 
 Repetim el control de qualitat que hem fet amb el paquet "arrayQualityMetrics", aquesta vegada sobre les dades normalitzades i sumaritzades.
 
-```{r pressure, echo=FALSE, fig.cap="A caption", out.width = '100%'}
-knitr::include_graphics("arrayQualityMetrics report for normData/md.png")
-```
+![Taula resum del control de qualitat de les dades normalitzades](extra_pics/mdNorm.png)
 
 
 En aquest cas detectem només *outliers* en les distàncies entre arrays. Al no haver-hi cap mostra amb més d'un marcador, donem per bones totes les mostres.
 
 
-```{r pressure, echo=FALSE, fig.cap="A caption", out.width = '100%'}
-knitr::include_graphics("arrayQualityMetrics report for normData/hm.png")
-```
+![Heatmap de les dades normalitzades](qcNorm/hm.png)
+
 
 Al *heatmap*, efectivament, observem diferència entre les mostres marcades com a *outliers* (la primera fila / última columna) i la resta, però no sembla una diferència especialment gran.
 
@@ -202,13 +187,15 @@ print(designMat)
 ```
 
 
-De cara a decidir quins contrastos farem per analitzar les dades, ens centrarem en els objectius que hem marcat.
+De cara a decidir quins contrastos farem per analitzar les dades, ens fixem en l'interès que puguin tenir de cara a obtenir coneixements rellevants.
 
-La comparació que pot ser més interessant és entre el grup de dieta alta en greixos (HFD) i el grup de tractament (CPT), ja que és la que ens dóna informació directa sobre l'efecte del tractament.
+Partint dels tres grups de ratolins estudiats, hi ha tres comparacions possibles: les resultants de combinar per parelles els tres grups.
 
-El contrast entre el grup de dieta estàndard (NC) i el grup de dieta alta en greixos (HFD) no ens diu res sobre l'efecte del tractament, però sí que ens aporta informació sobre l'alteració de base.
+Potser el més interessant per intentar extreure conclusions de l'experiment serà comparar dos contrastos: el contrast entre NC (dieta estàndard) i HFD (dieta grassa) amb el contrast entre NC (dieta estàndard) i CPT (dieta grassa i tractament), ja que la diferència entre aquests dos contrastos ens donarà informació sobre l'efecte del tractament.
 
-El tercer contrast possible, entre el grup de dieta estàndard (NC) i el grup de dieta alta en greixos i amb tractament (CPT), en principi és el menys rellevant ja que, malgrat que els dos grups els hem posat com a nivells d'un mateix factor, en el fons ens està donant informació conjunta de dos "factors" diferents: la dieta i el tractament. Tot i que  analitzar dos factors conjuntament no ens dona per sí sol informació útil, sí que pot ajudar a entendre la interacció entre els dos factors, de manera que aquesta comparació també la inclourem a l'anàlisi.
+D'altra banda, per sí sola la comparació entre el grup HFD i el grup CPT també ens dóna informació sobre el tractament.
+
+De manera que inclourem els tres possibles contrastos en els nostres anàlisis.
 
 Amb els contrastos decidits, generem la matriu amb la funció *makeContrasts* del paquet *limma*.
 
@@ -359,20 +346,114 @@ Veiem que els dos contrastos amb major número de gens diferencialment expressat
 
 Per fer l'anàlisi de significació biològica, primer generem el llistat d'identificadors *Entrez* a partir dels quals volem fer l'anàlisi.
 
-Fem servir la funció *select* per agafar de cada comparació els gens amb valors més significatius d'expressió diferencial i associar-los amb els seus respectius identificadors *Entrez*.
+Fem servir la funció *select* per agafar de cada comparació els gens amb valors més significatius d'expressió diferencial i fer un llistat amb els seus respectius identificadors *Entrez*.
 
-Per tal d'obtenir uns llistats de gens extens, hem optat per fer servir un llindar de p-valor ajustat molt poc restrictiu, de 0,25.
+Per tal d'obtenir uns llistats extenos, hem optat per fer servir un llindar de p-valor ajustat molt poc restrictiu, de 0,25.
 
-Podem fer-nos una idea de la mida d'aquestes llistes mirant quants gens inclouen.
+Podem fer-nos una idea de la mida d'aquests llistats mirant quants gens inclouen.
 
 ```{r, echo = FALSE}
 sapply(selectedIDs, length)
 ```
 
 
-Després generem una llista de tots els gens de ratolí coneguts amb almenys una anotació de Gene Ontology o de KEGG. La funció *mappedkeys* del paquet *AnnotationDbi* s'encarrega de seleccionar les anotacions a partir del paquet d'anotacions del genoma complet de ratolí: *org.Mm.eg.db*.
+Després generem un nou llistat amb tots els gens de ratolí coneguts que tenen almenys una anotació de Gene Ontology o de KEGG. La funció *mappedkeys* del paquet *AnnotationDbi* s'encarrega de seleccionar-los a partir del paquet d'anotacions del genoma complet de ratolí: *org.Mm.eg.db*.
 
-Finalment, a partir de les llistes que hem generat, apliquem l'anàlisi de significació biològica mitjançant la funció *enrichPathway* del paquet *ReactomePA*.
+Finalment, a partir de les llistes que hem generat, apliquem l'anàlisi de significació biològica mitjançant la funció *enrichPathway* del paquet *ReactomePA*. Aquesta anàlisi consisteix a comparar les anotacions dels gens seleccionats per buscar-hi termes GO i *pathways* en comú.
+
+El resultat de l'anàlisi és, per a cada contrast, un *data frame* amb una sèrie de *pathways* i estadístiques associades. El codi per fer l'anàlisi, tret del *Case study 1* dels materials de l'assignatura, també guarda aquestes dades en arxius .csv i genera alguns gràfics que guarda en .pdf.
+
+
+```{r}
+library(ReactomePA)
+listOfData <- selectedIDs[1:3]
+comparisonsNames <- names(listOfData)
+
+for (i in 1:length(listOfData)){
+        genesIn <- listOfData[[i]]
+        comparison <- comparisonsNames[i]
+        enrich.result <- enrichPathway(gene = genesIn,
+                                       pvalueCutoff = 0.05,
+                                       readable = T,
+                                       pAdjustMethod = "BH",
+                                       organism = "mouse",
+                                       universe = mapped_genes)
+   
+        cat("##################################")
+        cat("\nComparison: ", comparison,"\n")
+        print(head(enrich.result))
+        
+        if (length(rownames(enrich.result@result)) != 0) {
+                write.csv(as.data.frame(enrich.result), 
+                          file = paste0("./results/", "ReactomePA.Results.", comparison,
+                                        ".csv"),
+                          row.names = FALSE)
+                
+                pdf(file=paste0("./results/","ReactomePABarplot.",comparison,".pdf"),
+                    width = 4.5, height = 4.5)
+                print(barplot(enrich.result, showCategory = 15, font.size = 4, 
+                              title = paste0("Anàlisi de pathways per \n",
+                                             comparison)))
+                dev.off()
+                
+                png(file = paste0("./results/","ReactomePAcnetplot.",comparison,
+                                   ".png"))
+                print(cnetplot(enrich.result, categorySize = "geneNum",
+                               schowCategory = 15, vertex.label.cex = 0.75))
+                dev.off()
+        }
+}
+```
+
+
+## 4. Resultats.
+
+Com a resultat de l'anàlisi hem obtingut una sèrie de dades per a cada comparació entre grups:
+
+- Un llistat de gens diferencialment expressats, associats a diversos estadístics que ens indiquen el seu diferencial d'expressió i el nivell de significació estadística d'aquest diferencial. Aquests llistats han quedat guardats als arxius "annot_XXXXXXXX.csv".
+
+- Un llistat de *pathways* relacionats amb aquests gens juntament amb alguns estadístics associats. Aquests llistats estan guardats als arxius "ReactomePA.Results.XXXXXXXX.csv".
+
+Per a cada llistat de *pathways* també hem generat a mode de resum dos gràfics en arxius separats: un gràfic de barres mostrant el número de gens associats als principals *pathways*, i un gràfic de ret d'aquests *pathways*:
+
+
+![Barplot de HFD vs CPT](results/ReactomePABarplot.HFDvsCPT.png)
+
+
+![Gràfic de ret de HFD vs CPT](results/ReactomePAcnetplot.HFDvsCPT.png)
+
+
+![Barplot de NC vs HFD](results/ReactomePABarplot.NCvsHFD.png)
+
+
+![Gràfic de ret de NC vs HFD](results/ReactomePAcnetplot.NCvsHFD.png)
+
+
+![Barplot de NC vs CPT](results/ReactomePABarplot.NCvsCPT.png)
+
+
+![Gràfic de ret de NC vs CPT](results/ReactomePAcnetplot.NCvsCPT.png)
+
+
+
+## 5. Discussió.
+
+
+Sense pretendre, per falta de coneixements específics, extreure conclusions concretes dels nostres resultats, sí que podem apuntar alguns comentaris preliminars.
+
+Els *pathways* detectats amb la comparació NCvsHFD tenen a primera vista bastant en comú amb el tipus de processos que podem esperar, ja que inclouen rutes relacionades amb el metabolisme dels greixos i amb oxidacions. Té sentit que sigui així ja que els ratolins comparats en aquests contrastos (ratolins control contra ratolins amb dieta grassa) esperem que es diferenciin precisament en la presència de símptomes com l'acumulació de greixos o l'estrès oxidatiu.
+
+El resultat és molt semblant en el cas del contrast NCvsCPT. També té sentit que sigui així perquè de nou estem comparant ratolins control amb ratolins amb dieta grassa, només que aquests últims a més reben tractament. Una pregunta interessant que ens podríem plantejar és per què no ens apareix entre els principals *pathways* d'aquest contrast el metabolisme dels esteroides (aquesta absència és la principal diferència amb l'anterior contrast), i quina relació té això amb el tractament que rep el grup CPT.
+
+Pel que fa al contrast HFDvsCPT, observem com a principals *pathways* afectats uns de diferents, i a primera vista podrien tenir poca relació amb el tipus de símptomes que estem estudiant. (Per falta de familiaritat amb la majoria dels conceptes que hi apareixen no sóc capaç de dir-ho.) Aquesta discrepància amb els altres contrastos probablement s'explica perquè en aquells la principal font de contrast era la diferència entre la dieta estàndard d'un grup i la dieta alta en greixos de l'altre. Al comparar dos grups amb dieta alta en greixos, aquesta diferència desapareix, quedant només l'efecte del tractament. S'hauria de veure si els *pathways* que ens apareixen, doncs, són esperables d'acord amb el coneixement que tenim del tractament d'ATCP.
+
+
+La principal limitació que veig a l'estudi, que probablement és comuna a tots els estudis de *microarrays*, és la possible variació en els resultats en funció del tractament que es faci a partir de les dades crues. Són bastantes les decisions que es prenen durant el procés d'anàlisi que poden alterar el resultat final. Entenc que aquí els coneixements d'estadística i l'experiència an aquest tipus d'estudi són el que permeten arribar a uns resultats més fiables.
+
+
+
+
+
 
 
 
