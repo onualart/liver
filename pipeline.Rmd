@@ -3,8 +3,7 @@ title: "pipeline"
 author: "Oriol Nualart Mundó"
 date: "12/4/2020"
 output:
-  html_document:
-    df_print: paged
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -12,20 +11,16 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-## 1. Preparació de les dades.
+#### 3.2.1. Preparació de les dades.
 
-
-Abans que res, el primer que hem fet és descarregar els arxius .CEL i preparar l'arxiu *targets*. Aquests arxius els hem posat al subdirectori *data* del repositori.
-
-
-Llegim l'arxiu targets.csv.
+Càrrega de l'arxiu targets.csv.
 
 ```{r}
 targets <- read.csv2("./data/targets.csv", header = TRUE, sep = ";")
 ```
 
 
-Llegim els arxius .CEL per guardar tota la informació a l'*ExpressionSet* "rawData".
+Lectura dels arxius .CEL.
 
 ```{r}
 library(oligo)
@@ -38,7 +33,7 @@ rawData <- read.celfiles(celFiles, phenoData = my.targets)
 ```
 
 
-Canviem el nom llarg de les mostres pel ShotrName.
+Canvi del nom llarg de les mostres pel *ShotrName*.
 
 ```{r}
 my.targets@data$ShortName->rownames(pData(rawData))
@@ -47,9 +42,9 @@ colnames(rawData) <-rownames(pData(rawData))
 
 
 
-## 2. Control de qualitat de les dades crues.
+#### 3.2.2. Control de qualitat de les dades crues.
 
-Apliquem els controls de qualitat del paquet *arrayQualityMetrics*.
+Controls de qualitat del paquet *arrayQualityMetrics*.
 
 ```{r}
 library(arrayQualityMetrics)
@@ -57,24 +52,10 @@ arrayQualityMetrics(rawData, intgroup = c("Diet", "ShortName"), outdir = "qcRaw"
                     force = TRUE)
 ```
 
-Resum del control de qualitat. (Nota: la imatge de la taula és una captura de la pàgina html generada, ja que la funció *arrayQualityMetrics* no la crea automàticament.)
-
-![Taula resum del control de qualitat de les dades crues](extra_pics/mdRaw.png)
-
-Heatmap generat pel control de qualitat:
-
-![Heatmap de les dades crues](qcRaw/hm.png)
-
-
-
-Per treure la mostra NC.5, creem una nova carpeta "moddata", on posem l'arxiu targets modificat i tots els arxius .CEL excepte el que correspon a NC.5. Tot seguit tornem a carregar les dades, aquesta vegada des de "moddata".
 
 ```{r}
 targets <- read.csv2("./moddata/targets.csv", header = TRUE, sep = ";")
-```
 
-
-```{r}
 library(oligo)
 celFiles <- list.celfiles("./moddata", full.names = TRUE)
 library(Biobase)
@@ -82,14 +63,13 @@ my.targets <-read.AnnotatedDataFrame(file.path("./moddata","targets.csv"),
                                      header = TRUE, row.names = 1, 
                                      sep=";") 
 rawData <- read.celfiles(celFiles, phenoData = my.targets)
-```
 
-```{r}
 my.targets@data$ShortName->rownames(pData(rawData))
 colnames(rawData) <-rownames(pData(rawData))
 ```
 
-Repetim el control de qualitat.
+
+Repetició del control de qualitat.
 
 ```{r}
 arrayQualityMetrics(rawData, intgroup = c("Diet", "ShortName"), outdir = "qcMod",
@@ -97,16 +77,9 @@ arrayQualityMetrics(rawData, intgroup = c("Diet", "ShortName"), outdir = "qcMod"
 ```
 
 
-![Taula resum del control de qualitat de les dades havent tret la mostra NC.5](extra_pics/mdMod.png)
+#### 3.2.3. Normalització.
 
-
-![Heatmap de les dades sense NC.5](qcMod/hm.png)
-
-
-
-## 3. Normalització.
-
-Utilitzem el mètode Robust Multichip Analysis per fer la correcció del soroll de fons, normalitzar i sumaritzar les dades.
+Correcció del soroll de fons, normalització i sumarització de les dades.
 
 ```{r}
 library(oligo)
@@ -114,7 +87,7 @@ normData <- rma(rawData)
 ```
 
 
-## 4. Control de qualitat de les dades normalitzades.
+#### 3.2.4. Control de qualitat de les dades normalitzades.
 
 
 ```{r}
@@ -122,14 +95,8 @@ arrayQualityMetrics(normData, intgroup = c("Diet", "ShortName"), outdir = "qcNor
                     force = TRUE)
 ```
 
-![Taula resum del control de qualitat de les dades normalitzades](extra_pics/mdNorm.png)
 
-
-![Heatmap de les dades normalitzades](qcNorm/hm.png)
-
-
-
-## 5. Filtratge no específic.
+#### 3.2.5. Filtratge no específic.
 
 Filtrem els gens menys variables.
 
@@ -150,17 +117,16 @@ print(filtered$filter.log)
 ```
 
 
-Guardem les dades un cop normalitzades i un cop filtrades.
+Guardem les dades, un cop normalitzades i un cop filtrades, en arxius .csv.
 
 ```{r}
 write.csv(exprs(normData), file="./results/normData.csv")
 write.csv(exprs(filtData), file="./results/filtData.csv")
-save(normData, filtData, file="./results/NormFiltData.Rda")
 ```
 
 
 
-## 6. Identificació de gens diferencialment expressats.
+#### 3.2.6. Identificació de gens diferencialment expressats.
 
 Matriu de disseny.
 
@@ -195,14 +161,10 @@ Estimació dels contrastos.
 
 ```{r}
 fit.main<-contrasts.fit(fit, contMat)
-```
 
-
-Regularització de la variança.
-
-```{r}
 fit.main<-eBayes(fit.main)
 ```
+
 
 Guardem els resultats en un arxiu.
 
@@ -213,6 +175,8 @@ save(fit.main, file="./results/liver.fit.main.Rda")
 
 Exploració dels gens més diferencialment expressats en cada comparació.
 
+HFD vs CPT:
+
 ```{r}
 top_HFDvsCPT <- topTable (fit.main, number=nrow(fit.main), coef="HFDvsCPT",
                                adjust="fdr") 
@@ -220,11 +184,15 @@ head(top_HFDvsCPT)
 ```
 
 
+NC vs HFD:
+
 ```{r}
 top_NCvsHFD <- topTable (fit.main, number=nrow(fit.main), coef="NCvsHFD", adjust="fdr") 
 head(top_NCvsHFD)
 ```
 
+
+NC vs CPT:
 
 ```{r}
 top_NCvsCPT <- topTable (fit.main, number=nrow(fit.main), coef="NCvsCPT",
@@ -233,7 +201,7 @@ head(top_NCvsCPT)
 ```
 
 
-## 7. Anotació dels resultats.
+#### 3.2.7. Anotació dels resultats.
 
 Funció *annotatedTopTable*.
 
@@ -280,6 +248,7 @@ geneNames <- geneNames$GENENAME
 opt <- par(cex.lab = 0.7)
 ```
 
+HFD vs CPT:
 
 ```{r}
 volcanoplot(fit.main, coef=1, highlight=10, names=geneNames,
@@ -290,6 +259,8 @@ par(opt)
 ```
 
 
+NC vs HFD:
+
 ```{r}
 volcanoplot(fit.main, coef=2, highlight=10, names=geneNames,
 main=paste("Gens diferencialment expressats en el contrast",
@@ -298,6 +269,8 @@ abline(v=c(-1,1))
 par(opt)
 ```
 
+
+NC vs CPT:
 
 ```{r}
 volcanoplot(fit.main, coef=3, highlight=10, names=geneNames,
@@ -353,7 +326,7 @@ heatmap.2(heatData,
 ```
 
 
-## 8. Comparació entre comparacions.
+#### 3.2.8. Comparació entre comparacions.
 
 Número de gens diferencialment expressats en cada comparació.
 
@@ -370,7 +343,7 @@ title("Gens diferencialment expressats segons cada comparació.")
 ```
 
 
-## 9. Anàlisi de significació biològica.
+#### 3.2.9. Anàlisi de significació biològica.
 
 Generació del llistat d'identificadors *Entrez*.
 
@@ -399,7 +372,7 @@ sapply(selectedIDs, length)
 ```
 
 
-Genergeneració de la llista dels gens de ratolí amb anotacions a GO i a KEGG.
+Genergeneració del llistat dels gens de ratolí amb anotacions a GO i a KEGG.
 
 ```{r}
 library(org.Mm.eg.db)
@@ -409,42 +382,38 @@ mapped_genes <- union(mapped_genes2GO , mapped_genes2KEGG)
 ```
 
 
-Anàlisi de significació biològica.
-
+Anàlisi d'enriquiment de termes GO.
 
 ```{r}
-library(ReactomePA)
+library(clusterProfiler)
 listOfData <- selectedIDs[1:3]
 comparisonsNames <- names(listOfData)
 
 for (i in 1:length(listOfData)){
         genesIn <- listOfData[[i]]
         comparison <- comparisonsNames[i]
-        enrich.result <- enrichPathway(gene = genesIn,
-                                       pvalueCutoff = 0.05,
-                                       readable = T,
-                                       pAdjustMethod = "BH",
-                                       organism = "mouse",
-                                       universe = mapped_genes)
-   
-        cat("##################################")
-        cat("\nComparison: ", comparison,"\n")
-        print(head(enrich.result))
         
-        if (length(rownames(enrich.result@result)) != 0) {
-                write.csv(as.data.frame(enrich.result), 
-                          file = paste0("./results/", "ReactomePA.Results.", comparison,
+        enrich.GO <- enrichGO(gene = genesIn,
+                              OrgDb = org.Mm.eg.db,
+                              pvalueCutoff = 0.05,
+                              pAdjustMethod = "BH",
+                              universe = mapped_genes)
+        
+        if (length(rownames(enrich.GO@result)) != 0) {
+                write.csv(as.data.frame(enrich.GO), 
+                          file = paste0("./results/", "enrichGO.Results.", comparison,
                                         ".csv"),
                           row.names = FALSE)
                 
-                png(file=paste0("./results/","ReactomePABarplot.",comparison,".png"))
-                print(barplot(enrich.result, showCategory = 15, font.size = 4, 
-                              title = paste0("Reactome Pathway Analysis for ",
-                                             comparison, ". Barplot")))
+                png(file=paste0("./results/","enrichGOBarplot.",comparison,".png"),
+                    width = 800)
+                print(barplot(enrich.GO, showCategory = 15, font.size = 8, 
+                              title = paste0("Anàlisi d'enriquiment de termes GO per ",
+                                             comparison)))
                 dev.off()
                 
-                png(file = paste0("./results/","ReactomePAcnetplot.",comparison,".png"))
-                print(cnetplot(enrich.result, categorySize = "geneNum",
+                png(file = paste0("./results/","enrichGOcnetplot.",comparison,".png"))
+                print(cnetplot(enrich.GO, categorySize = "geneNum",
                                schowCategory = 15, vertex.label.cex = 0.75))
                 dev.off()
         }
@@ -452,31 +421,39 @@ for (i in 1:length(listOfData)){
 ```
 
 
+Anàlisi d'enriquiment de *pathways* KEGG.
 
+```{r}
+for (i in 1:length(listOfData)){
+        genesIn <- listOfData[[i]]
+        comparison <- comparisonsNames[i]
+        
+        enrich.KEGG <- enrichKEGG(gene = genesIn,
+                                  organism     = 'mmu',
+                                  pvalueCutoff = 0.1,
+                                  pAdjustMethod = "BH",
+                                  universe = mapped_genes)
 
-
-## 4. Resultats.
-
-![Barplot de HFD vs CPT](results/ReactomePABarplot.HFDvsCPT.png)
-
-
-![Gràfic de ret de HFD vs CPT](results/ReactomePAcnetplot.HFDvsCPT.png)
-
-
-![Barplot de NC vs HFD](results/ReactomePABarplot.NCvsHFD.png)
-
-
-![Gràfic de ret de NC vs HFD](results/ReactomePAcnetplot.NCvsHFD.png)
-
-
-
-![Barplot de NC vs CPT](results/ReactomePABarplot.NCvsCPT.png)
-
-
-![Gràfic de ret de NC vs CPT](results/ReactomePAcnetplot.NCvsCPT.png)
-
-
-
+        
+        if (length(rownames(enrich.KEGG@result)) != 0) {
+                write.csv(as.data.frame(enrich.KEGG), 
+                          file = paste0("./results/", "enrichKEGG.Results.", comparison,
+                                        ".csv"),
+                          row.names = FALSE)
+                
+                png(file=paste0("./results/","enrichKEGGBarplot.",comparison,".png"),
+                    width = 800)
+                print(barplot(enrich.KEGG, showCategory = 15, font.size = 8, 
+                              title = paste0("Anàlisi d'enriquiment de pathways KEGG per ", comparison)))
+                dev.off()
+                
+                png(file = paste0("./results/","enrichKEGGcnetplot.",comparison,".png"))
+                print(cnetplot(enrich.KEGG, categorySize = "geneNum",
+                               schowCategory = 15, vertex.label.cex = 0.75))
+                dev.off()
+        }
+}
+```
 
 
 

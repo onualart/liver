@@ -1,7 +1,0 @@
-"ID","Description","GeneRatio","BgRatio","pvalue","p.adjust","qvalue","geneID","Count"
-"R-MMU-8957322","Metabolism of steroids","16/227","125/8772",1.21702748882115e-07,6.40156459119925e-05,6.14919152246476e-05,"Tm7sf2/Hsd17b11/Dhcr7/Stard4/Nsdhl/Fdps/Cyp51/Dhcr24/Cyp2r1/Akr1c6/Msmo1/Osbp/Slc10a1/Cyp39a1/Abcc3/Slc10a2",16
-"R-MMU-8978868","Fatty acid metabolism","18/227","169/8772",3.33815001085465e-07,8.77933452854772e-05,8.43322108005384e-05,"Acaca/Acly/Fasn/Dbi/Ehhadh/Thrsp/Elovl6/Cyp4a31/Acacb/Ephx2/Fads2/Cyp4a12a/Mid1ip1/Cyp4b1/Acsl1/Akr1c6/Acot1/Fads1",18
-"R-MMU-211859","Biological oxidations","19/227","202/8772",1.0792921952825e-06,0.000189235898239532,0.000181775527626526,"Cyp4v3/Gstm7/Ces1d/Cyp4a31/Ugt2b1/Cyp4a12a/Cyp51/Ces3a/Ephx1/Cyp2r1/Cyp4b1/Ugt2a3/Ugt2b34/Papss1/Gss/Adh7/Cyp39a1/Comt/Acsm5",19
-"R-MMU-191273","Cholesterol biosynthesis","7/227","25/8772",2.28892965374973e-06,0.000300994249468089,0.000289127956263124,"Tm7sf2/Dhcr7/Nsdhl/Fdps/Cyp51/Dhcr24/Msmo1",7
-"R-MMU-211945","Phase I - Functionalization of compounds","11/227","108/8772",0.000103850078131833,0.0109250282194689,0.0104943236849011,"Cyp4v3/Ces1d/Cyp4a31/Cyp4a12a/Cyp51/Ces3a/Ephx1/Cyp2r1/Cyp4b1/Adh7/Cyp39a1",11
-"R-MMU-200425","Import of palmitoyl-CoA into the mitochondrial matrix","4/227","14/8772",0.000356404327203804,0.0312447793515335,0.0300129959750572,"Acaca/Thrsp/Acacb/Mid1ip1",4

@@ -2,7 +2,10 @@
 title: "informe"
 author: "Oriol Nualart Mundó"
 date: "15/4/2020"
-output: pdf_document
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -10,40 +13,40 @@ knitr::opts_chunk$set(echo = FALSE)
 ```
 
 
-### Enllaç al repositori GIT associat a la PAC: https://github.com/onualart/liver.git
+#### Enllaç al repositori GIT associat a la PAC: https://github.com/onualart/liver.git
 
 
-### Títol de l'estudi: Expression data from liver of Cyclocarya paliurus triterpenic acids treated high-fat-diet-induced mice
+#### Títol de l'estudi: Expression data from liver of Cyclocarya paliurus triterpenic acids treated high-fat-diet-induced mice
 
-### Identificador GEO de l'estudi: GSE125045
+#### Identificador GEO de l'estudi: GSE125045
 
-### Enllaç a GEO: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE125045
+#### Enllaç a GEO: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE125045
 
-### Organisme: *Mus musculus*
+#### Organisme: *Mus musculus*
 
-### Tipus d'array: Affymetrix Mouse Gene 2.0 ST Array
+#### Tipus d'array: Affymetrix Mouse Gene 2.0 ST Array
 
-### Identificador GEO de l'array: GPL16570 	
-
-
-
-
-
-
-## ÍNDEX
+#### Identificador GEO de l'array: GPL16570 	
 
 
 
 
 
 
+### Continguts
 
-## 1. Abstract.
+
+
+
+
+
+
+### 1. Abstract.
 
 Es sap que els àcids triterpenics de la planta *Cyclocarya paliurus* (ATCP) tenen efectes beneficiosos en pacients amb esteatosi hepàtica no alcohòlica (EHNA), paliant l'estrès oxidatiu i la disfunció mitocondrial associats a aquesta malaltia. Aquest estudi utilitza microarrays per estudiar, en teixit hepàtic d'un model de ratolí, l'expressió gènica subjacent als símptomes de l'EHNA i al tractament amb ATCP.
 
 
-## 2. Objectius.
+### 2. Objectius.
 
 Tot i que la informació que podem obtenir a partir de la pàgina de GEO no especifica els objectius concrets (l'estudi no està publicat), sabem que és un experiment de tipus "perfil d'expressió". Podem marcar uns objectius lògics.
 
@@ -54,9 +57,9 @@ Tot i que la informació que podem obtenir a partir de la pàgina de GEO no espe
 - A partir d'aquests gens expressats diferencialment, identificar processos i *pathways* alterats en aquestes comparacions, i veure quina relació poden tenir, ja sigui directa o indirectament, amb els coneixements previs que tenim de la malaltia i del tractament.
 
 
-## 3. Materials i mètodes.
+### 3. Materials i mètodes.
 
-###     3.1. Disseny de l'experiment.
+####     3.1. Disseny de l'experiment.
 
 D'acord amb la informació disponible, 15 ratolins van ser repartits aleatoriament en tres grups (5 per grup) corresponents als tres nivells d'un factor:
 
@@ -71,9 +74,11 @@ Els ratolins van ser sacrificats i se'n van extreure mostres de fetge per ser an
 Els microarrays utilitzats per fer l'anàlisi són del model Affymetrix Mouse Gene 2.0 ST Array (GPL16570). Es tracta d'arrays d'oligonucleòtids d'un color, amb sondes corresponents a fragments d'una selecció de gens de ratolí.
 
 
-###     3.2. Procediment d'anàlisi de les dades.
+####     3.2. Procediment d'anàlisi de les dades.
 
 El procediment detallat amb tot el codi de R utilitzat, juntament amb l'*output* dels fragments de codi, es pot trobar a l'arxiu "pipeline.pdf" al repositori de GitHub, generat a partir de l'arxiu de markdown "pipeline.Rmd". El codi pressuposa tenir instal·lats tots els paquets necessaris, inclosos els paquets d'anotacions *mogene20sttranscriptcluster.db* i *org.Mm.eg.db*.
+
+El codi utilitzat està basat principalment en el que apareix al *Case Study 1* dels materials de l'assignatura.
 
 
 ####        3.2.1. Preparació de les dades.
@@ -86,26 +91,74 @@ A partir d'aquí hem utilitzat R per fer el tractament de les dades.
 
 Hem carregat l'arxiu *targets*, i la informació dels arxius .CEL l'hem passat a l'*ExpressionSet* *rawData*.
 
+```{r, include=FALSE}
+targets <- read.csv2("./data/targets.csv", header = TRUE, sep = ";")
+```
+
+
+```{r, include=FALSE}
+library(oligo)
+celFiles <- list.celfiles("./data", full.names = TRUE)
+library(Biobase)
+my.targets <-read.AnnotatedDataFrame(file.path("./data","targets.csv"),
+                                     header = TRUE, row.names = 1, 
+                                     sep=";") 
+rawData <- read.celfiles(celFiles, phenoData = my.targets)
+```
+
+
+```{r, include=FALSE}
+my.targets@data$ShortName->rownames(pData(rawData))
+colnames(rawData) <-rownames(pData(rawData))
+```
+\newpage
 
 ####       3.2.2. Control de qualitat de les dades crues.
 
 Per fer el control de qualitat de les dades crues hem utilitzat el paquet *arrayQualityMetrics*, que genera un informe molt complet.
 
+```{r, include=FALSE}
+library(arrayQualityMetrics)
+arrayQualityMetrics(rawData, intgroup = c("Diet", "ShortName"), outdir = "qcRaw",
+                    force = TRUE)
+```
 
 ![Taula resum del control de qualitat de les dades crues](extra_pics/mdRaw.png)
 
 
 Al resum del control de qualitat comprovem que es detecten alguns *outliers*, especialment a la mostra NC.5.
-
+\newpage
 
 ![Heatmap de les dades crues](qcRaw/hm.png)
 
 
 Al *heatmap*, per exemple, es veu clarament que aquesta mostra (corresponent a la primera columna/última fila) es diferencia de la resta.
 
-Tenint en compte que es tracta d'una mostra del grup control, del qual no esperariem grans variacions, optem per no utilitzar aquesta mostra en els anàlisis.
+Tenint en compte que es tracta d'una mostra del grup control, del qual no esperariem grans variacions, optem per no utilitzar aquesta mostra en els anàlisis. De manera que creem una versió modificada de la carpeta de dades amb un arxiu targets modificat.
+
+
+```{r, include=FALSE}
+targets <- read.csv2("./moddata/targets.csv", header = TRUE, sep = ";")
+
+library(oligo)
+celFiles <- list.celfiles("./moddata", full.names = TRUE)
+library(Biobase)
+my.targets <-read.AnnotatedDataFrame(file.path("./moddata","targets.csv"),
+                                     header = TRUE, row.names = 1, 
+                                     sep=";") 
+rawData <- read.celfiles(celFiles, phenoData = my.targets)
+
+my.targets@data$ShortName->rownames(pData(rawData))
+colnames(rawData) <-rownames(pData(rawData))
+```
+
 
 Un cop tretes les dades de la mostra, repetim el control de qualitat.
+
+```{r, include=FALSE}
+arrayQualityMetrics(rawData, intgroup = c("Diet", "ShortName"), outdir = "qcMod",
+                    force = TRUE)
+```
 
 
 ![Taula resum del control de qualitat de les dades havent tret la mostra NC.5](extra_pics/mdMod.png)
@@ -122,12 +175,22 @@ El *heatmap* és ara més uniforme, només la mostra CPT.1 és detectada com a *
 
 Utilitzem el mètode Robust Multichip Analysis per fer la normalització. Aquest mètode, fàcil d'aplicar amb R mitjançant la funció *rma* del paquet *oligo*, engloba tots els passos de la correcció del soroll de fons, la normalització en sí i la sumaritzarització de les dades.
 
+```{r, include=FALSE}
+library(oligo)
+normData <- rma(rawData)
+```
+
 Un cop realitzat el procés, les dades queden guardades a *normData*, un *ExpressionSet* força més reduit, ja que els valors de les sondes individuals s'han "sumaritzat" en un sol valor per "gen" (*probeset*). 
 
 
 ####      3.2.4. Control de qualitat de les dades normalitzades.
 
 Repetim el control de qualitat que hem fet amb el paquet "arrayQualityMetrics", aquesta vegada sobre les dades normalitzades i sumaritzades.
+
+```{r, include=FALSE}
+arrayQualityMetrics(normData, intgroup = c("Diet", "ShortName"), outdir = "qcNorm",
+                    force = TRUE)
+```
 
 ![Taula resum del control de qualitat de les dades normalitzades](extra_pics/mdNorm.png)
 
@@ -149,6 +212,18 @@ En aquest cas el llindar de variabilitat que hem posat és baix, de 0,5, ja que 
 
 El paquet *mogene20sttranscriptcluster.db*, que conté anotacions corresponents als gens de l'array, ens proporciona els identificadors dels gens, cosa que ens permet deixar fora també els gens que no tinguin identificador.
 
+```{r, include=FALSE}
+library(genefilter)
+library(mogene20sttranscriptcluster.db)
+annotation(normData) <- "mogene20sttranscriptcluster.db"
+filtered <- nsFilter(normData, 
+                     require.entrez = TRUE, remove.dupEntrez = TRUE,
+                     var.filter=TRUE, var.func=IQR, var.cutoff=0.5, 
+                     filterByQuantile=TRUE, feature.exclude = "^AFFX")
+filtData <- filtered$eset
+```
+
+
 Aquests són els gens eliminats en el procés de filtratge:
 
 
@@ -159,6 +234,10 @@ print(filtered$filter.log)
 
 Guardem les dades normalitzades i les dades filtrades en arxius a la carpeta *results* del repositori.
 
+```{r}
+write.csv(exprs(normData), file="./results/normData.csv")
+write.csv(exprs(filtData), file="./results/filtData.csv")
+```
 
 ####      3.2.6. Identificació de gens diferencialment expressats.
 
@@ -179,7 +258,7 @@ on *C* és la matriu de contrastos.
 
 La funció *model.matrix* del paquet *limma* ens genera fàcilment la matriu de disseny a partir de les nostres dades.
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, message=FALSE}
 library(limma)
 designMat<- model.matrix(~0+Diet, pData(filtData))
 colnames(designMat) <- c("CPT", "HFD", "NC")
@@ -191,15 +270,13 @@ De cara a decidir quins contrastos farem per analitzar les dades, ens fixem en l
 
 Partint dels tres grups de ratolins estudiats, hi ha tres comparacions possibles: les resultants de combinar per parelles els tres grups.
 
-Potser el més interessant per intentar extreure conclusions de l'experiment serà comparar dos contrastos: el contrast entre NC (dieta estàndard) i HFD (dieta grassa) amb el contrast entre NC (dieta estàndard) i CPT (dieta grassa i tractament), ja que la diferència entre aquests dos contrastos ens donarà informació sobre l'efecte del tractament.
+Potser el més interessant per intentar extreure conclusions de l'experiment serà comparar dos contrastos: el contrast entre NC (dieta estàndard) i HFD (dieta grassa) amb el contrast entre NC (dieta estàndard) i CPT (dieta grassa i tractament). La diferència entre aquests dos contrastos ens donarà informació sobre l'efecte del tractament.
 
-D'altra banda, per sí sola la comparació entre el grup HFD i el grup CPT també ens dóna informació sobre el tractament.
-
-De manera que inclourem els tres possibles contrastos en els nostres anàlisis.
+D'altra banda, per sí sola la comparació entre el grup HFD i el grup CPT també ens dóna informació sobre el tractament, de manera que inclourem els tres possibles contrastos en els nostres anàlisis.
 
 Amb els contrastos decidits, generem la matriu amb la funció *makeContrasts* del paquet *limma*.
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, message=FALSE}
 contMat <- makeContrasts (HFDvsCPT = CPT-HFD,
                           NCvsHFD = HFD-NC,
                           NCvsCPT = CPT-NC,
@@ -210,13 +287,30 @@ print(contMat)
 
 Estimem el model amb la funció *lmFit* del paquet *limma*: en cada grup definit a la matriu de disseny, calculem els paràmetres del model per a cada gen a partir dels valors d'expressió de les diferents mostres del grup. La funció *lmfit* utilitza per defecte el mètode de mínims quadrats per fer aquest càlcul.
 
+```{r, include=FALSE}
+library(limma)
+fit<-lmFit(filtData, designMat)
+```
+
+
 Amb els paràmetres del model calculats i amb la matriu de contrastos, estimem els diferents contrastos amb la funció *contrasts.fit*. 
 
 Utilitzant la funció *eBayes*, calculem per a cada gen i comparació una sèrie d'estadístics que ens ajudaran a decidir quins gens podem considerar que estan diferencialment expressats i quins no.
 
+```{r, include=FALSE}
+fit.main<-contrasts.fit(fit, contMat)
+
+fit.main<-eBayes(fit.main)
+```
+
+
 Obtenim per a cada comparació un llistat de gens associat a una sèrie de valors, entre ells el *fold-change* i el p-valor per a aquell gen i comparació. Per controlar el número de falsos positius deguts a l'elevat número de tests, aquesta funció també calcula p-valors ajustats mitjançant el mètode de Benjamini i Hochberg.
 
 Finalment guardem els resultats a l'arxiu "liver.fit.main.Rda".
+
+```{r, include=FALSE}
+save(fit.main, file="./results/liver.fit.main.Rda")
+```
 
 
 Per fer una primera visualització d'algunes de les dades obtingudes, explorem amb la funció *topTable* els gens amb un p-valor més petit, dintre de les diferents comparacions.
@@ -224,7 +318,7 @@ Per fer una primera visualització d'algunes de les dades obtingudes, explorem a
 
 HFDvsCPT:
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, message=FALSE}
 top_HFDvsCPT <- topTable (fit.main, number=nrow(fit.main), coef="HFDvsCPT",
                                adjust="fdr") 
 head(top_HFDvsCPT)
@@ -233,14 +327,14 @@ head(top_HFDvsCPT)
 
 NCvsHFD
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, message=FALSE}
 top_NCvsHFD <- topTable (fit.main, number=nrow(fit.main), coef="NCvsHFD", adjust="fdr") 
 head(top_NCvsHFD)
 ```
 
 NCvsCPT:
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, message=FALSE}
 top_NCvsCPT <- topTable (fit.main, number=nrow(fit.main), coef="NCvsCPT",
                                adjust="fdr") 
 head(top_NCvsCPT)
@@ -253,16 +347,52 @@ A destacar d'aquests resultats preliminars, els valors força elevats dels p-val
 
 Basant-nos en la funció *annotatedTopTable* que apareix al *Case_Study_1* dels materials de l'assignatura, generem les anotacions per als tres conjunts de gens diferencialment expressats que hem obtingut.
 
+```{r, include=FALSE}
+annotatedTopTable <- function(topTab, anotPackage)
+{
+ topTab <- cbind(PROBEID=rownames(topTab), topTab)
+ myProbes <- rownames(topTab)
+ thePackage <- eval(parse(text = anotPackage))
+ geneAnots <- select(thePackage, myProbes, c("SYMBOL", "ENTREZID", "GENENAME"))
+ annotatedTopTab<- merge(x=geneAnots, y=topTab, by.x="PROBEID", by.y="PROBEID")
+return(annotatedTopTab)
+}
+```
+
 El que fa la funció és associar els gens que tenim en els *data frames* obtinguts en els últims passos amb les anotacions disponibles per a aquests gens, que treiem del paquet d'anotacions corresponent al microarray utilitzat. Concretament, agafa els paràmetres "SYMBOL", "ENTREZID" i "GENENAME", que ens seran útils en els següents passos del nostre procediment d'anàlisi.
+
+```{r, include=FALSE}
+library(mogene20sttranscriptcluster.db)
+
+annot_HFDvsCPT <- annotatedTopTable(top_HFDvsCPT,
+                                    anotPackage="mogene20sttranscriptcluster.db")
+annot_NCvsHFD <- annotatedTopTable(top_NCvsHFD,
+                                   anotPackage="mogene20sttranscriptcluster.db")
+annot_NCvsCPT <- annotatedTopTable(top_NCvsCPT,
+                                   anotPackage="mogene20sttranscriptcluster.db")
+```
+
 
 Els *data frames* obtinguts els guardem en arxius .csv.
 
+```{r, include=FALSE}
+write.csv(annot_HFDvsCPT, file="./results/annot_HFDvsCPT.csv")
+write.csv(annot_NCvsHFD, file="./results/annot_NCvsHFD.csv")
+write.csv(annot_NCvsCPT, file="./results/annot_NCvsCPT.csv")
+```
 
 Per tenir una nova visualització de les dades un cop anotades, generem volcano plots per les tres comparacions, incloent els noms dels gens amb un p-valor més baix.
 
 El volcano plot ens dóna una idea de com es distribueixen els gens pel que fa al *fold-change*, que ens indica les diferències d'expressió, i pel que fa al p-valor, que ens indica el grau de significació estadística d'aquestes diferències.
 
-```{r, echo = FALSE}
+```{r, einclude=FALSE}
+geneNames <- select(mogene20sttranscriptcluster.db, rownames(fit.main), c("GENENAME"))
+geneNames <- geneNames$GENENAME
+opt <- par(cex.lab = 0.7)
+```
+
+
+```{r, echo = FALSE, message=FALSE}
 volcanoplot(fit.main, coef=1, highlight=10, names=geneNames,
 main=paste("Gens diferencialment expressats en el contrast",
 colnames(contMat)[1], sep="\n"))
@@ -271,7 +401,7 @@ par(opt)
 ```
 
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, message=FALSE}
 volcanoplot(fit.main, coef=2, highlight=10, names=geneNames,
 main=paste("Gens diferencialment expressats en el contrast",
 colnames(contMat)[2], sep="\n"))
@@ -280,7 +410,7 @@ par(opt)
 ```
 
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, message=FALSE}
 volcanoplot(fit.main, coef=3, highlight=10, names=geneNames,
 main=paste("Gens diferencialment expressats en el contrast",
 colnames(contMat)[3], sep="\n"))
@@ -294,10 +424,29 @@ Els volcano plots ens confirmen la impressió que el contrast HFDvsCPT mostra po
 
 Passem a seleccionar els gens diferencialment expressats en alguna de les comparacions. La funció *decideTests* ho fa, a partir de les estimacions dels nostres contrastos, agafant els gens que tenen un p-valor per sota d'un determinat número i un valor absolut del Log2 del *fold-change* per sobre d'un altre número. En el nostre cas hem utilitzat un límit de 0,1 per al p-valor i de 0.75 per al Log2 del *fold-change*.
 
+```{r, include=FALSE}
+library(limma)
+res <- decideTests(fit.main, method="separate", adjust.method="fdr", p.value=0.1, lfc=0.75)
+sum.res.rows <- apply(abs(res), 1, sum)
+res.selected <- res[sum.res.rows!=0,]
+```
+
 
 Podem fer una ullada general al nivell d'expressió dels gens seleccionats amb un *heatmap*.
 
-```{r, echo = FALSE}
+```{r, include=FALSE}
+library(gplots)
+
+genesHeatmap <- rownames(res.selected)
+heatData <- exprs(filtData)[rownames(exprs(filtData)) %in% genesHeatmap,]
+geneNames <- select(mogene20sttranscriptcluster.db, rownames(heatData), c("GENENAME"))
+GENENAMES<- geneNames$GENENAME
+rownames(heatData) <- GENENAMES
+my_palette <- colorRampPalette(c("blue3", "gold"))(n = 299)
+```
+
+
+```{r, echo = FALSE, message=FALSE}
 heatmap.2(heatData,
           Rowv = TRUE,
           Colv = TRUE,
@@ -325,7 +474,7 @@ Hem indicat que les mostres s'ajuntin per semblança entre files i entre columne
 
 Mirem quants gens diferencialment expressats hem obtingut amb cada contrast segons la selecció que hem fet.
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, message=FALSE}
 print(summary(res))
 ```
 
@@ -333,7 +482,7 @@ Com ja ens anunciaven les visualitzacions preliminars, la comparació entre els 
 
 Fem un diagrama de Venn per veure quants gens coincideixen a expressar-se diferencialment entre les diferents comparacions.
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, message=FALSE}
 vennDiagram (res.selected[,1:3], cex=0.9)
 title("Gens diferencialment expressats segons cada comparació.")
 ```
@@ -350,55 +499,77 @@ Fem servir la funció *select* per agafar de cada comparació els gens amb valor
 
 Per tal d'obtenir uns llistats extenos, hem optat per fer servir un llindar de p-valor ajustat molt poc restrictiu, de 0,25.
 
+```{r, include=FALSE}
+genesHFDvsCPT <- top_HFDvsCPT["adj.P.Val"]<0.25
+IDsHFDvsCPT <- rownames(top_HFDvsCPT)[genesHFDvsCPT]
+EntrezHFDvsCPT <- select(mogene20sttranscriptcluster.db, IDsHFDvsCPT, c("ENTREZID"))
+EntrezHFDvsCPT <- EntrezHFDvsCPT$ENTREZID
+
+genesNCvsHFD <- top_NCvsHFD["adj.P.Val"]<0.25
+IDsNCvsHFD <- rownames(top_NCvsHFD)[genesNCvsHFD]
+EntrezNCvsHFD <- select(mogene20sttranscriptcluster.db, IDsNCvsHFD, c("ENTREZID"))
+EntrezNCvsHFD <- EntrezNCvsHFD$ENTREZID
+
+genesNCvsCPT <- top_NCvsCPT["adj.P.Val"]<0.25
+IDsNCvsCPT <- rownames(top_NCvsCPT)[genesNCvsCPT]
+EntrezNCvsCPT <- select(mogene20sttranscriptcluster.db, IDsNCvsCPT, c("ENTREZID"))
+EntrezNCvsCPT <- EntrezNCvsCPT$ENTREZID
+
+selectedIDs <- list(EntrezHFDvsCPT, EntrezNCvsHFD, EntrezNCvsCPT)
+names(selectedIDs) <- c("HFDvsCPT", "NCvsHFD", "NCvsCPT")
+```
+
+
 Podem fer-nos una idea de la mida d'aquests llistats mirant quants gens inclouen.
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, message=FALSE}
 sapply(selectedIDs, length)
 ```
 
 
 Després generem un nou llistat amb tots els gens de ratolí coneguts que tenen almenys una anotació de Gene Ontology o de KEGG. La funció *mappedkeys* del paquet *AnnotationDbi* s'encarrega de seleccionar-los a partir del paquet d'anotacions del genoma complet de ratolí: *org.Mm.eg.db*.
 
-Finalment, a partir de les llistes que hem generat, apliquem l'anàlisi de significació biològica mitjançant la funció *enrichPathway* del paquet *ReactomePA*. Aquesta anàlisi consisteix a comparar les anotacions dels gens seleccionats per buscar-hi termes GO i *pathways* en comú.
+```{r, include=FALSE}
+library(org.Mm.eg.db)
+mapped_genes2GO <- mappedkeys(org.Mm.egGO)
+mapped_genes2KEGG <- mappedkeys(org.Mm.egPATH)
+mapped_genes <- union(mapped_genes2GO , mapped_genes2KEGG)
+```
 
-El resultat de l'anàlisi és, per a cada contrast, un *data frame* amb una sèrie de *pathways* i estadístiques associades. El codi per fer l'anàlisi, tret del *Case study 1* dels materials de l'assignatura, també guarda aquestes dades en arxius .csv i genera alguns gràfics que guarda en .pdf.
+
+Finalment, a partir de les llistes que hem generat, apliquem l'anàlisi de significació biològica mitjançant les funcions *enrichGO* i *enrichKEGG* del paquet *clusterProfiler*. Aquestes anàlisis consisteixen a comparar les anotacions dels gens seleccionats mitjançant tests de sobrerepresentació, per buscar-hi termes GO i *pathways* en comú.
 
 
-```{r}
-library(ReactomePA)
+```{r, include=FALSE}
+library(clusterProfiler)
 listOfData <- selectedIDs[1:3]
 comparisonsNames <- names(listOfData)
 
 for (i in 1:length(listOfData)){
         genesIn <- listOfData[[i]]
         comparison <- comparisonsNames[i]
-        enrich.result <- enrichPathway(gene = genesIn,
-                                       pvalueCutoff = 0.05,
-                                       readable = T,
-                                       pAdjustMethod = "BH",
-                                       organism = "mouse",
-                                       universe = mapped_genes)
-   
-        cat("##################################")
-        cat("\nComparison: ", comparison,"\n")
-        print(head(enrich.result))
         
-        if (length(rownames(enrich.result@result)) != 0) {
-                write.csv(as.data.frame(enrich.result), 
-                          file = paste0("./results/", "ReactomePA.Results.", comparison,
+        enrich.GO <- enrichGO(gene = genesIn,
+                              OrgDb = org.Mm.eg.db,
+                              pvalueCutoff = 0.1,
+                              pAdjustMethod = "BH",
+                              universe = mapped_genes)
+        
+        if (length(rownames(enrich.GO@result)) != 0) {
+                write.csv(as.data.frame(enrich.GO), 
+                          file = paste0("./results/", "enrichGO.Results.", comparison,
                                         ".csv"),
                           row.names = FALSE)
                 
-                pdf(file=paste0("./results/","ReactomePABarplot.",comparison,".pdf"),
-                    width = 4.5, height = 4.5)
-                print(barplot(enrich.result, showCategory = 15, font.size = 4, 
-                              title = paste0("Anàlisi de pathways per \n",
+                png(file=paste0("./results/","enrichGOBarplot.",comparison,".png"),
+                    width = 800)
+                print(barplot(enrich.GO, showCategory = 15, font.size = 8, 
+                              title = paste0("Anàlisi d'enriquiment de termes GO per ",
                                              comparison)))
                 dev.off()
                 
-                png(file = paste0("./results/","ReactomePAcnetplot.",comparison,
-                                   ".png"))
-                print(cnetplot(enrich.result, categorySize = "geneNum",
+                png(file = paste0("./results/","enrichGOcnetplot.",comparison,".png"))
+                print(cnetplot(enrich.GO, categorySize = "geneNum",
                                schowCategory = 15, vertex.label.cex = 0.75))
                 dev.off()
         }
@@ -406,55 +577,102 @@ for (i in 1:length(listOfData)){
 ```
 
 
-## 4. Resultats.
+```{r, include=FALSE}
+for (i in 1:length(listOfData)){
+        genesIn <- listOfData[[i]]
+        comparison <- comparisonsNames[i]
+        
+        enrich.KEGG <- enrichKEGG(gene = genesIn,
+                                  organism     = 'mmu',
+                                  pvalueCutoff = 0.1,
+                                  pAdjustMethod = "BH",
+                                  universe = mapped_genes)
+
+        
+        if (length(rownames(enrich.KEGG@result)) != 0) {
+                write.csv(as.data.frame(enrich.KEGG), 
+                          file = paste0("./results/", "enrichKEGG.Results.", comparison,
+                                        ".csv"),
+                          row.names = FALSE)
+                
+                png(file=paste0("./results/","enrichKEGGBarplot.",comparison,".png"),
+                    width = 800)
+                print(barplot(enrich.KEGG, showCategory = 15, font.size = 8, 
+                              title = paste0("Anàlisi d'enriquiment de pathways KEGG per ", comparison)))
+                dev.off()
+                
+                png(file = paste0("./results/","enrichKEGGcnetplot.",comparison,".png"))
+                print(cnetplot(enrich.KEGG, categorySize = "geneNum",
+                               schowCategory = 15, vertex.label.cex = 0.75))
+                dev.off()
+        }
+}
+```
+
+
+Els resultats de les anàlisis són, per a cada contrast, dos *data frames* amb una sèrie de termes GO i de *pathways* amb estadístiques associades. Al fer l'anàlisi guardem aquestes dades en arxius .csv i generem alguns gràfics que també guardem en arxius.
+
+
+### 4. Resultats.
 
 Com a resultat de l'anàlisi hem obtingut una sèrie de dades per a cada comparació entre grups:
 
 - Un llistat de gens diferencialment expressats, associats a diversos estadístics que ens indiquen el seu diferencial d'expressió i el nivell de significació estadística d'aquest diferencial. Aquests llistats han quedat guardats als arxius "annot_XXXXXXXX.csv".
 
-- Un llistat de *pathways* relacionats amb aquests gens juntament amb alguns estadístics associats. Aquests llistats estan guardats als arxius "ReactomePA.Results.XXXXXXXX.csv".
+- Un llistat de termes GO relacionats amb aquests gens juntament amb alguns estadístics associats. Aquests llistats estan guardats als arxius "enrichGO.Results.XXXXXXXX.csv".
 
-Per a cada llistat de *pathways* també hem generat a mode de resum dos gràfics en arxius separats: un gràfic de barres mostrant el número de gens associats als principals *pathways*, i un gràfic de ret d'aquests *pathways*:
+- Un llistat de *pathways* relacionats amb aquests gens juntament amb alguns estadístics associats. Aquests llistats estan guardats als arxius "enrichKEGG.Results.XXXXXXXX.csv".
 
-
-![Barplot de HFD vs CPT](results/ReactomePABarplot.HFDvsCPT.png)
-
-
-![Gràfic de ret de HFD vs CPT](results/ReactomePAcnetplot.HFDvsCPT.png)
+Per a cada llistat determes GO i de *pathways* també hem generat a mode de resum dos gràfics en arxius separats: un gràfic de barres mostrant el número de gens associats als principals *pathways*, i un gràfic de ret d'aquests *pathways*:
 
 
-![Barplot de NC vs HFD](results/ReactomePABarplot.NCvsHFD.png)
+![Barplot de HFD vs CPT](results/enrichGOBarplot.HFDvsCPT.png)
 
 
-![Gràfic de ret de NC vs HFD](results/ReactomePAcnetplot.NCvsHFD.png)
+![Barplot de HFD vs CPT](results/enrichKEGGBarplot.HFDvsCPT.png)
 
 
-![Barplot de NC vs CPT](results/ReactomePABarplot.NCvsCPT.png)
+![Gràfic de ret de HFD vs CPT](results/enrichGOcnetplot.HFDvsCPT.png)
 
 
-![Gràfic de ret de NC vs CPT](results/ReactomePAcnetplot.NCvsCPT.png)
+![Gràfic de ret de HFD vs CPT](results/enrichKEGGcnetplot.HFDvsCPT.png)
+
+
+![Barplot de NC vs HFD](results/enrichGOBarplot.NCvsHFD.png)
+
+
+![Gràfic de ret de NC vs HFD](results/enrichGOcnetplot.NCvsHFD.png)
+
+
+![Barplot de NC vs CPT](results/enrichGOBarplot.NCvsCPT.png)
+
+
+![Gràfic de ret de NC vs CPT](results/enrichGOcnetplot.NCvsCPT.png)
 
 
 
-## 5. Discussió.
+### 5. Discussió.
 
+En principi no veig problemes en el disseny de l'estudi, entenent que l'objectiu és generar un perfil d'expressió.
+
+La principal limitació que veig és probablement comuna a tots els estudis de *microarrays*. Si bé l'estudi ens aporta un llistat de gens diferencialment expressats, i a partir d'aquests una sèrie de termes relacionats, no ens diu res sobre com hem d'interpretar aquestes dades. Això no pretén ser una crítica, simplement constatar la necessitat d'una bona interpretació dels resultats i de posar-los en el context d'altres possibles estudis relacionats que haguem fet o preveiem fer. En el cas d'aquest estudi probablement l'objectiu no és tant poder extreure unes conclusions concretes com proporcionar eines per poder-ho fer en altres estudis. 
+
+Un altre aspecte que sens dubte s'ha tingut en compte, tot i que no és específic d'un estudi de *microarrays*, són les limitacions del model d'organisme utilitzat. Aquest simula la malaltia d'interès, l'esteatosi hepàtica no alcohòlica, a partir de diferències de dieta entre grups de ratolins, i sembla obvi que tant per l'organisme estudiat com per la manera de provocar els símptomes hi haurà limitacions.
+
+
+### 6. Conclusions
 
 Sense pretendre, per falta de coneixements específics, extreure conclusions concretes dels nostres resultats, sí que podem apuntar alguns comentaris preliminars.
 
-Els *pathways* detectats amb la comparació NCvsHFD tenen a primera vista bastant en comú amb el tipus de processos que podem esperar, ja que inclouen rutes relacionades amb el metabolisme dels greixos i amb oxidacions. Té sentit que sigui així ja que els ratolins comparats en aquests contrastos (ratolins control contra ratolins amb dieta grassa) esperem que es diferenciin precisament en la presència de símptomes com l'acumulació de greixos o l'estrès oxidatiu.
+Els termes GO i *pathways* detectats amb la comparació NCvsHFD semblen tenir bastant en comú amb el tipus de processos que esperem, ja que inclouen termes relacionats amb el metabolisme dels greixos i amb processos oxidatius. Té sentit que sigui així ja que els ratolins comparats en aquest contrast (ratolins control contra ratolins amb dieta grassa) esperem que es diferenciin precisament en la presència de símptomes com l'acumulació de greixos o l'estrès oxidatiu. Caldria veure quina relació poden tenir la resta de termes que apareixen destacats amb les diferències de dieta.
 
-El resultat és molt semblant en el cas del contrast NCvsCPT. També té sentit que sigui així perquè de nou estem comparant ratolins control amb ratolins amb dieta grassa, només que aquests últims a més reben tractament. Una pregunta interessant que ens podríem plantejar és per què no ens apareix entre els principals *pathways* d'aquest contrast el metabolisme dels esteroides (aquesta absència és la principal diferència amb l'anterior contrast), i quina relació té això amb el tractament que rep el grup CPT.
+El resultat és semblant en el cas del contrast NCvsCPT. També té sentit que sigui així perquè de nou estem comparant ratolins control amb ratolins amb dieta grassa, només que aquests últims a més reben tractament.
 
-Pel que fa al contrast HFDvsCPT, observem com a principals *pathways* afectats uns de diferents, i a primera vista podrien tenir poca relació amb el tipus de símptomes que estem estudiant. (Per falta de familiaritat amb la majoria dels conceptes que hi apareixen no sóc capaç de dir-ho.) Aquesta discrepància amb els altres contrastos probablement s'explica perquè en aquells la principal font de contrast era la diferència entre la dieta estàndard d'un grup i la dieta alta en greixos de l'altre. Al comparar dos grups amb dieta alta en greixos, aquesta diferència desapareix, quedant només l'efecte del tractament. S'hauria de veure si els *pathways* que ens apareixen, doncs, són esperables d'acord amb el coneixement que tenim del tractament d'ATCP.
+Seria interessant fer una comparació detallada entre els resultats dels dos contrastos i veure quina relació tenen les diferències amb el tractament d'ATCP que rep el grup CPT. Per exemple, en el contrast que inclou el grup de tractament observem un increment en el nombre de gens relacionats amb processos oxidatius, cosa que podria indicar que l'ATCP efectivament tindria un efecte activador d'aquests processos.
 
+Pel que fa al contrast HFDvsCPT, observem com a termes destacats uns de diferents.  Aquesta discrepància amb els altres contrastos probablement s'explica perquè en aquells la principal font de contrast era la diferència entre la dieta estàndard d'un grup i la dieta alta en greixos de l'altre. Al comparar dos grups amb dieta alta en greixos, aquesta diferència desapareix, quedant només l'efecte del tractament.
 
-La principal limitació que veig a l'estudi, que probablement és comuna a tots els estudis de *microarrays*, és la possible variació en els resultats en funció del tractament que es faci a partir de les dades crues. Són bastantes les decisions que es prenen durant el procés d'anàlisi que poden alterar el resultat final. Entenc que aquí els coneixements d'estadística i l'experiència an aquest tipus d'estudi són el que permeten arribar a uns resultats més fiables.
-
-
-
-
-
-
+Destaca la presència de diversos termes relacionats amb la síntesi proteica. S'hauria de veure si aquests són esperables d'acord amb el coneixement que tenim del tractament d'ATCP, ja que a primera vista podrien tenir poca relació amb el tipus d'efectes que estem estudiant.
 
 
 
