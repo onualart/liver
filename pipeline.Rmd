@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-#### 3.2.1. Preparació de les dades.
+### 3.2.1. Preparació de les dades.
 
 Càrrega de l'arxiu targets.csv.
 
@@ -33,7 +33,7 @@ rawData <- read.celfiles(celFiles, phenoData = my.targets)
 ```
 
 
-Canvi del nom llarg de les mostres pel *ShotrName*.
+Canvi del nom llarg de les mostres pel *ShortName*.
 
 ```{r}
 my.targets@data$ShortName->rownames(pData(rawData))
@@ -42,7 +42,7 @@ colnames(rawData) <-rownames(pData(rawData))
 
 
 
-#### 3.2.2. Control de qualitat de les dades crues.
+### 3.2.2. Control de qualitat de les dades crues.
 
 Controls de qualitat del paquet *arrayQualityMetrics*.
 
@@ -52,6 +52,16 @@ arrayQualityMetrics(rawData, intgroup = c("Diet", "ShortName"), outdir = "qcRaw"
                     force = TRUE)
 ```
 
+
+Visualització de la taula resum del control de qualitat i del heatmap.
+
+```{r, fig.show='hold', fig.align="center", out.width='0.4\\linewidth', fig.cap="Taula resum del control de qualitat de les dades crues i heatmap"}
+library(knitr)
+include_graphics(c("extra_pics/mdRaw.png", "qcRaw/hm.png"))
+```
+
+
+Càrrega de les dades modificades.
 
 ```{r}
 targets <- read.csv2("./moddata/targets.csv", header = TRUE, sep = ";")
@@ -76,8 +86,14 @@ arrayQualityMetrics(rawData, intgroup = c("Diet", "ShortName"), outdir = "qcMod"
                     force = TRUE)
 ```
 
+Visualització de la taula resum i el heatmap.
 
-#### 3.2.3. Normalització.
+```{r, fig.show='hold', fig.align="center", out.width='0.4\\linewidth', fig.cap="Taula resum del control de qualitat de les dades modificades i heatmap"}
+include_graphics(c("extra_pics/mdMod.png", "qcMod/hm.png"))
+```
+
+
+### 3.2.3. Normalització.
 
 Correcció del soroll de fons, normalització i sumarització de les dades.
 
@@ -87,7 +103,7 @@ normData <- rma(rawData)
 ```
 
 
-#### 3.2.4. Control de qualitat de les dades normalitzades.
+### 3.2.4. Control de qualitat de les dades normalitzades.
 
 
 ```{r}
@@ -95,8 +111,13 @@ arrayQualityMetrics(normData, intgroup = c("Diet", "ShortName"), outdir = "qcNor
                     force = TRUE)
 ```
 
+Visualització de la taula resum i el heatmap.
 
-#### 3.2.5. Filtratge no específic.
+```{r, fig.show='hold', fig.align="center", out.width='0.4\\linewidth', fig.cap="Taula resum del control de qualitat de les dades normalitzades i heatmap"}
+include_graphics(c("extra_pics/mdNorm.png", "qcNorm/hm.png"))
+```
+
+### 3.2.5. Filtratge no específic.
 
 Filtrem els gens menys variables.
 
@@ -126,7 +147,7 @@ write.csv(exprs(filtData), file="./results/filtData.csv")
 
 
 
-#### 3.2.6. Identificació de gens diferencialment expressats.
+### 3.2.6. Identificació de gens diferencialment expressats.
 
 Matriu de disseny.
 
@@ -201,7 +222,7 @@ head(top_NCvsCPT)
 ```
 
 
-#### 3.2.7. Anotació dels resultats.
+### 3.2.7. Anotació dels resultats.
 
 Funció *annotatedTopTable*.
 
@@ -250,7 +271,7 @@ opt <- par(cex.lab = 0.7)
 
 HFD vs CPT:
 
-```{r}
+```{r, echo = FALSE, message=FALSE, fig.show='hold', fig.align="center", out.width='0.7\\linewidth'}
 volcanoplot(fit.main, coef=1, highlight=10, names=geneNames,
 main=paste("Gens diferencialment expressats en el contrast",
 colnames(contMat)[1], sep="\n"))
@@ -261,7 +282,7 @@ par(opt)
 
 NC vs HFD:
 
-```{r}
+```{r, echo = FALSE, message=FALSE, fig.show='hold', fig.align="center", out.width='0.7\\linewidth'}
 volcanoplot(fit.main, coef=2, highlight=10, names=geneNames,
 main=paste("Gens diferencialment expressats en el contrast",
 colnames(contMat)[2], sep="\n"))
@@ -272,7 +293,7 @@ par(opt)
 
 NC vs CPT:
 
-```{r}
+```{r, echo = FALSE, message=FALSE, fig.show='hold', fig.align="center", out.width='0.7\\linewidth'}
 volcanoplot(fit.main, coef=3, highlight=10, names=geneNames,
 main=paste("Gens diferencialment expressats en el contrast",
 colnames(contMat)[3], sep="\n"))
@@ -326,7 +347,7 @@ heatmap.2(heatData,
 ```
 
 
-#### 3.2.8. Comparació entre comparacions.
+### 3.2.8. Comparació entre comparacions.
 
 Número de gens diferencialment expressats en cada comparació.
 
@@ -343,7 +364,7 @@ title("Gens diferencialment expressats segons cada comparació.")
 ```
 
 
-#### 3.2.9. Anàlisi de significació biològica.
+### 3.2.9. Anàlisi de significació biològica.
 
 Generació del llistat d'identificadors *Entrez*.
 
@@ -456,4 +477,46 @@ for (i in 1:length(listOfData)){
 ```
 
 
+### 4. Resultats.
 
+```{r, fig.show='hold', fig.align="center", out.width='0.8\\linewidth', fig.cap="Gràfic de barres de termes GO per HFD vs CPT"}
+include_graphics("results/enrichGOBarplot.HFDvsCPT.png")
+```
+
+```{r, fig.show='hold', fig.align="center", out.width='0.8\\linewidth', fig.cap="Gràfic de barres de pathways per HFD vs CPT"}
+include_graphics("results/enrichKEGGBarplot.HFDvsCPT.png")
+```
+
+
+```{r, fig.show='hold', fig.align="center", out.width='0.4\\linewidth', fig.cap="Gràfics de ret de termes GO i de pathways per HFD vs CPT"}
+include_graphics(c("results/enrichGOcnetplot.HFDvsCPT.png",
+                   "results/enrichKEGGcnetplot.HFDvsCPT.png"))
+```
+
+```{r, fig.show='hold', fig.align="center", out.width='0.8\\linewidth', fig.cap="Gràfic de barres de termes GO per NC vs HFD"}
+include_graphics("results/enrichGOBarplot.NCvsHFD.png")
+```
+
+```{r, fig.show='hold', fig.align="center", out.width='0.8\\linewidth', fig.cap="Gràfic de barres de pathways per NC vs HFD"}
+include_graphics("results/enrichKEGGBarplot.NCvsHFD.png")
+```
+
+
+```{r, fig.show='hold', fig.align="center", out.width='0.4\\linewidth', fig.cap="Gràfics de ret de termes GO i de pathways per NC vs HFD"}
+include_graphics(c("results/enrichGOcnetplot.NCvsHFD.png",
+                   "results/enrichKEGGcnetplot.NCvsHFD.png"))
+```
+
+```{r, fig.show='hold', fig.align="center", out.width='0.8\\linewidth', fig.cap="Gràfic de barres de termes GO per NC vs CPT"}
+include_graphics("results/enrichGOBarplot.NCvsCPT.png")
+```
+
+
+```{r, fig.show='hold', fig.align="center", out.width='0.8\\linewidth', fig.cap="Gràfic de barres de pathways per NC vs CPT"}
+include_graphics("results/enrichKEGGBarplot.NCvsCPT.png")
+```
+
+```{r, fig.show='hold', fig.align="center", out.width='0.4\\linewidth', fig.cap="Gràfics de ret de termes GO i de pathways per NC vs CPT"}
+include_graphics(c("results/enrichGOcnetplot.NCvsCPT.png",
+                   "results/enrichKEGGcnetplot.NCvsCPT.png"))
+```

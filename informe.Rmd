@@ -1,11 +1,10 @@
 ---
-title: "informe"
+title: "Anàlisi de Dades Òmiques PAC1"
 author: "Oriol Nualart Mundó"
 date: "15/4/2020"
-output:
-  pdf_document: default
-  html_document:
-    df_print: paged
+output: pdf_document
+bibliography: bibliography.bib
+link-citations: true
 ---
 
 ```{r setup, include=FALSE}
@@ -13,27 +12,16 @@ knitr::opts_chunk$set(echo = FALSE)
 ```
 
 
-#### Enllaç al repositori GIT associat a la PAC: https://github.com/onualart/liver.git
+#### Enllaç al repositori GIT associat a la PAC: [https://github.com/onualart/liver.git](https://github.com/onualart/liver.git)
 
 
-#### Títol de l'estudi: Expression data from liver of Cyclocarya paliurus triterpenic acids treated high-fat-diet-induced mice
+#### Títol de l'estudi: Expression data from liver of *Cyclocarya paliurus* triterpenic acids treated high-fat-diet-induced mice [@1]
 
 #### Identificador GEO de l'estudi: GSE125045
 
-#### Enllaç a GEO: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE125045
+	
 
-#### Organisme: *Mus musculus*
-
-#### Tipus d'array: Affymetrix Mouse Gene 2.0 ST Array
-
-#### Identificador GEO de l'array: GPL16570 	
-
-
-
-
-
-
-### Continguts
+## Continguts
 
 
 
@@ -41,12 +29,12 @@ knitr::opts_chunk$set(echo = FALSE)
 
 
 
-### 1. Abstract.
+## 1. Abstract.
 
 Es sap que els àcids triterpenics de la planta *Cyclocarya paliurus* (ATCP) tenen efectes beneficiosos en pacients amb esteatosi hepàtica no alcohòlica (EHNA), paliant l'estrès oxidatiu i la disfunció mitocondrial associats a aquesta malaltia. Aquest estudi utilitza microarrays per estudiar, en teixit hepàtic d'un model de ratolí, l'expressió gènica subjacent als símptomes de l'EHNA i al tractament amb ATCP.
 
 
-### 2. Objectius.
+## 2. Objectius.
 
 Tot i que la informació que podem obtenir a partir de la pàgina de GEO no especifica els objectius concrets (l'estudi no està publicat), sabem que és un experiment de tipus "perfil d'expressió". Podem marcar uns objectius lògics.
 
@@ -57,9 +45,9 @@ Tot i que la informació que podem obtenir a partir de la pàgina de GEO no espe
 - A partir d'aquests gens expressats diferencialment, identificar processos i *pathways* alterats en aquestes comparacions, i veure quina relació poden tenir, ja sigui directa o indirectament, amb els coneixements previs que tenim de la malaltia i del tractament.
 
 
-### 3. Materials i mètodes.
+## 3. Materials i mètodes.
 
-####     3.1. Disseny de l'experiment.
+###     3.1. Disseny de l'experiment.
 
 D'acord amb la informació disponible, 15 ratolins van ser repartits aleatoriament en tres grups (5 per grup) corresponents als tres nivells d'un factor:
 
@@ -74,14 +62,14 @@ Els ratolins van ser sacrificats i se'n van extreure mostres de fetge per ser an
 Els microarrays utilitzats per fer l'anàlisi són del model Affymetrix Mouse Gene 2.0 ST Array (GPL16570). Es tracta d'arrays d'oligonucleòtids d'un color, amb sondes corresponents a fragments d'una selecció de gens de ratolí.
 
 
-####     3.2. Procediment d'anàlisi de les dades.
+###     3.2. Procediment d'anàlisi de les dades.
 
 El procediment detallat amb tot el codi de R utilitzat, juntament amb l'*output* dels fragments de codi, es pot trobar a l'arxiu "pipeline.pdf" al repositori de GitHub, generat a partir de l'arxiu de markdown "pipeline.Rmd". El codi pressuposa tenir instal·lats tots els paquets necessaris, inclosos els paquets d'anotacions *mogene20sttranscriptcluster.db* i *org.Mm.eg.db*.
 
-El codi utilitzat està basat principalment en el que apareix al *Case Study 1* dels materials de l'assignatura.
+El codi utilitzat està basat principalment en el que apareix al *Case Study 1* dels materials de l'assignatura[^1].
 
 
-####        3.2.1. Preparació de les dades.
+###        3.2.1. Preparació de les dades.
 
 Abans que res, el primer que hem fet és descarregar els arxius .CEL de la pàgina de GEO i preparar l'arxiu *targets*. Aquests arxius els hem posat al subdirectori *data* del repositori.
 
@@ -113,7 +101,7 @@ colnames(rawData) <-rownames(pData(rawData))
 ```
 \newpage
 
-####       3.2.2. Control de qualitat de les dades crues.
+###       3.2.2. Control de qualitat de les dades crues.
 
 Per fer el control de qualitat de les dades crues hem utilitzat el paquet *arrayQualityMetrics*, que genera un informe molt complet.
 
@@ -123,18 +111,18 @@ arrayQualityMetrics(rawData, intgroup = c("Diet", "ShortName"), outdir = "qcRaw"
                     force = TRUE)
 ```
 
-![Taula resum del control de qualitat de les dades crues](extra_pics/mdRaw.png)
+
+```{r, echo = FALSE, fig.show='hold', fig.align="center", out.width='0.4\\linewidth', fig.cap="Taula resum del control de qualitat de les dades crues i heatmap"}
+library(knitr)
+include_graphics(c("extra_pics/mdRaw.png", "qcRaw/hm.png"))
+```
 
 
 Al resum del control de qualitat comprovem que es detecten alguns *outliers*, especialment a la mostra NC.5.
-\newpage
-
-![Heatmap de les dades crues](qcRaw/hm.png)
-
 
 Al *heatmap*, per exemple, es veu clarament que aquesta mostra (corresponent a la primera columna/última fila) es diferencia de la resta.
 
-Tenint en compte que es tracta d'una mostra del grup control, del qual no esperariem grans variacions, optem per no utilitzar aquesta mostra en els anàlisis. De manera que creem una versió modificada de la carpeta de dades amb un arxiu targets modificat.
+Tenint en compte que es tracta d'una mostra del grup control, del qual no esperariem grans variacions, optem per no utilitzar-la en els anàlisis. De manera que creem una versió modificada de la carpeta de dades amb un arxiu targets modificat.
 
 
 ```{r, include=FALSE}
@@ -161,19 +149,17 @@ arrayQualityMetrics(rawData, intgroup = c("Diet", "ShortName"), outdir = "qcMod"
 ```
 
 
-![Taula resum del control de qualitat de les dades havent tret la mostra NC.5](extra_pics/mdMod.png)
+```{r, echo = FALSE, fig.show='hold', fig.align="center", out.width='0.4\\linewidth', fig.cap="Taula resum del control de qualitat de les dades modificades i heatmap"}
+include_graphics(c("extra_pics/mdMod.png", "qcMod/hm.png"))
+```
 
 
-Observem que ara no hi ha cap mostra amb més d'un marcador d'*outliers*.
-
-![Heatmap de les dades sense NC.5](qcMod/hm.png)
-
-El *heatmap* és ara més uniforme, només la mostra CPT.1 és detectada com a *outlier* però no es visualitza una diferència tan destacada.
+Observem que ara no hi ha cap mostra amb més d'un marcador d'*outliers*. El *heatmap* és ara més uniforme, només la mostra CPT.1 és detectada com a *outlier* però no es visualitza una diferència tan destacada.
 
 
-####      3.2.3. Normalització.
+###      3.2.3. Normalització.
 
-Utilitzem el mètode Robust Multichip Analysis per fer la normalització. Aquest mètode, fàcil d'aplicar amb R mitjançant la funció *rma* del paquet *oligo*, engloba tots els passos de la correcció del soroll de fons, la normalització en sí i la sumaritzarització de les dades.
+Utilitzem el mètode Robust Multichip Analysis d'Irizarry et al. [-@2] per fer la normalització. Aquest mètode, fàcil d'aplicar amb R mitjançant la funció *rma* del paquet *oligo*, engloba tots els passos de la correcció del soroll de fons, la normalització en sí i la sumaritzarització de les dades.
 
 ```{r, include=FALSE}
 library(oligo)
@@ -183,7 +169,7 @@ normData <- rma(rawData)
 Un cop realitzat el procés, les dades queden guardades a *normData*, un *ExpressionSet* força més reduit, ja que els valors de les sondes individuals s'han "sumaritzat" en un sol valor per "gen" (*probeset*). 
 
 
-####      3.2.4. Control de qualitat de les dades normalitzades.
+###      3.2.4. Control de qualitat de les dades normalitzades.
 
 Repetim el control de qualitat que hem fet amb el paquet "arrayQualityMetrics", aquesta vegada sobre les dades normalitzades i sumaritzades.
 
@@ -192,21 +178,20 @@ arrayQualityMetrics(normData, intgroup = c("Diet", "ShortName"), outdir = "qcNor
                     force = TRUE)
 ```
 
-![Taula resum del control de qualitat de les dades normalitzades](extra_pics/mdNorm.png)
+
+```{r, echo = FALSE, fig.show='hold', fig.align="center", out.width='0.4\\linewidth', fig.cap="Taula resum del control de qualitat de les dades normalitzades i heatmap"}
+include_graphics(c("extra_pics/mdNorm.png", "qcNorm/hm.png"))
+```
 
 
 En aquest cas detectem només *outliers* en les distàncies entre arrays. Al no haver-hi cap mostra amb més d'un marcador, donem per bones totes les mostres.
 
-
-![Heatmap de les dades normalitzades](qcNorm/hm.png)
-
-
-Al *heatmap*, efectivament, observem diferència entre les mostres marcades com a *outliers* (la primera fila / última columna) i la resta, però no sembla una diferència especialment gran.
+Al *heatmap*, efectivament, observem diferència entre les mostres marcades com a *outliers* (les dues primeres files / últimes columnes) i la resta, però visualment no sembla una diferència especialment gran.
 
 
-####      3.2.5. Filtratge no específic.
+###      3.2.5. Filtratge no específic.
 
-Per filtrar els gens menys variables del nostre *ExpressionSet*, apliquem la funció *nsFilter* del paquet *genefilter.
+Per filtrar els gens menys variables del nostre *ExpressionSet*, apliquem la funció *nsFilter* del paquet *genefilter*.
 
 En aquest cas el llindar de variabilitat que hem posat és baix, de 0,5, ja que hem optat per ser conservadors amb les dades. Això vol dir que dels gens del nostre conjunt de dades que podriem utilitzar per fer els anàlisis, ens quedem amb la meitat que mostra major variabilitat i descartem l'altra meitat.
 
@@ -239,7 +224,7 @@ write.csv(exprs(normData), file="./results/normData.csv")
 write.csv(exprs(filtData), file="./results/filtData.csv")
 ```
 
-####      3.2.6. Identificació de gens diferencialment expressats.
+###      3.2.6. Identificació de gens diferencialment expressats.
 
 Per identificar els gens diferencialment expressats, primer hem de definir el model i crear les matrius de disseny i de contrastos.
 
@@ -256,7 +241,7 @@ $\beta = C\alpha$
 on *C* és la matriu de contrastos.
 
 
-La funció *model.matrix* del paquet *limma* ens genera fàcilment la matriu de disseny a partir de les nostres dades.
+La funció *model.matrix* del paquet *limma* [@3] ens genera fàcilment la matriu de disseny a partir de les nostres dades.
 
 ```{r, echo = FALSE, message=FALSE}
 library(limma)
@@ -295,7 +280,7 @@ fit<-lmFit(filtData, designMat)
 
 Amb els paràmetres del model calculats i amb la matriu de contrastos, estimem els diferents contrastos amb la funció *contrasts.fit*. 
 
-Utilitzant la funció *eBayes*, calculem per a cada gen i comparació una sèrie d'estadístics que ens ajudaran a decidir quins gens podem considerar que estan diferencialment expressats i quins no.
+Utilitzant la funció *eBayes*, calculem per a cada gen i comparació una sèrie d'estadístics que ens ajudaran a decidir quins gens podem considerar que estan diferencialment expressats i quins no. El mètode combina una estimació de la variabilitat basada en tota la matriu amb estimacions individuals per cada valor [@4].
 
 ```{r, include=FALSE}
 fit.main<-contrasts.fit(fit, contMat)
@@ -304,7 +289,7 @@ fit.main<-eBayes(fit.main)
 ```
 
 
-Obtenim per a cada comparació un llistat de gens associat a una sèrie de valors, entre ells el *fold-change* i el p-valor per a aquell gen i comparació. Per controlar el número de falsos positius deguts a l'elevat número de tests, aquesta funció també calcula p-valors ajustats mitjançant el mètode de Benjamini i Hochberg.
+Obtenim per a cada comparació un llistat de gens associat a una sèrie de valors, entre ells el *fold-change* i el p-valor per a aquell gen i comparació. Per controlar el número de falsos positius deguts a l'elevat número de tests, aquesta funció també calcula p-valors ajustats mitjançant el mètode de Benjamini i Hochberg [-@5].
 
 Finalment guardem els resultats a l'arxiu "liver.fit.main.Rda".
 
@@ -343,7 +328,7 @@ head(top_NCvsCPT)
 A destacar d'aquests resultats preliminars, els valors força elevats dels p-valors ajustats en el contrast HFDvsCPT, cosa que indicaria que els dos grups es diferencien relativament poc.
 
 
-####      3.2.7. Anotació dels resultats.
+###      3.2.7. Anotació dels resultats.
 
 Basant-nos en la funció *annotatedTopTable* que apareix al *Case_Study_1* dels materials de l'assignatura, generem les anotacions per als tres conjunts de gens diferencialment expressats que hem obtingut.
 
@@ -392,7 +377,7 @@ opt <- par(cex.lab = 0.7)
 ```
 
 
-```{r, echo = FALSE, message=FALSE}
+```{r, echo = FALSE, message=FALSE, fig.show='hold', fig.align="center", out.width='0.7\\linewidth'}
 volcanoplot(fit.main, coef=1, highlight=10, names=geneNames,
 main=paste("Gens diferencialment expressats en el contrast",
 colnames(contMat)[1], sep="\n"))
@@ -401,7 +386,7 @@ par(opt)
 ```
 
 
-```{r, echo = FALSE, message=FALSE}
+```{r, echo = FALSE, message=FALSE, fig.show='hold', fig.align="center", out.width='0.7\\linewidth'}
 volcanoplot(fit.main, coef=2, highlight=10, names=geneNames,
 main=paste("Gens diferencialment expressats en el contrast",
 colnames(contMat)[2], sep="\n"))
@@ -410,7 +395,7 @@ par(opt)
 ```
 
 
-```{r, echo = FALSE, message=FALSE}
+```{r, echo = FALSE, message=FALSE, fig.show='hold', fig.align="center", out.width='0.7\\linewidth'}
 volcanoplot(fit.main, coef=3, highlight=10, names=geneNames,
 main=paste("Gens diferencialment expressats en el contrast",
 colnames(contMat)[3], sep="\n"))
@@ -436,7 +421,6 @@ Podem fer una ullada general al nivell d'expressió dels gens seleccionats amb u
 
 ```{r, include=FALSE}
 library(gplots)
-
 genesHeatmap <- rownames(res.selected)
 heatData <- exprs(filtData)[rownames(exprs(filtData)) %in% genesHeatmap,]
 geneNames <- select(mogene20sttranscriptcluster.db, rownames(heatData), c("GENENAME"))
@@ -470,7 +454,7 @@ heatmap.2(heatData,
 Hem indicat que les mostres s'ajuntin per semblança entre files i entre columnes. Observem que els tres grups experimentals s'han separat correctament, i és especialment visible la diferència entre el nivell d'expressió dels gens del grup NC i el dels altres dos grups.
 
 
-####      3.2.8. Comparació entre comparacions.
+###      3.2.8. Comparació entre comparacions.
 
 Mirem quants gens diferencialment expressats hem obtingut amb cada contrast segons la selecció que hem fet.
 
@@ -491,7 +475,7 @@ title("Gens diferencialment expressats segons cada comparació.")
 Veiem que els dos contrastos amb major número de gens diferencialment expressats, NCvsHFD i NCvsCPT, comparteixen un número important de gens. Tots els contrastos tenen en comú amb altres contrastos aproximadament la meitat dels gens que han detectat.
 
 
-####      3.2.9. Anàlisi de significació biològica.
+###      3.2.9. Anàlisi de significació biològica.
 
 Per fer l'anàlisi de significació biològica, primer generem el llistat d'identificadors *Entrez* a partir dels quals volem fer l'anàlisi.
 
@@ -613,7 +597,7 @@ for (i in 1:length(listOfData)){
 Els resultats de les anàlisis són, per a cada contrast, dos *data frames* amb una sèrie de termes GO i de *pathways* amb estadístiques associades. Al fer l'anàlisi guardem aquestes dades en arxius .csv i generem alguns gràfics que també guardem en arxius.
 
 
-### 4. Resultats.
+## 4. Resultats.
 
 Com a resultat de l'anàlisi hem obtingut una sèrie de dades per a cada comparació entre grups:
 
@@ -623,44 +607,62 @@ Com a resultat de l'anàlisi hem obtingut una sèrie de dades per a cada compara
 
 - Un llistat de *pathways* relacionats amb aquests gens juntament amb alguns estadístics associats. Aquests llistats estan guardats als arxius "enrichKEGG.Results.XXXXXXXX.csv".
 
-Per a cada llistat determes GO i de *pathways* també hem generat a mode de resum dos gràfics en arxius separats: un gràfic de barres mostrant el número de gens associats als principals *pathways*, i un gràfic de ret d'aquests *pathways*:
+Per a cada llistat de termes GO i de *pathways* també hem generat a mode de resum dos gràfics en arxius separats: un gràfic de barres mostrant el número de gens associats als principals termes, i un gràfic de ret d'aquests termes:
 
 
-![Barplot de HFD vs CPT](results/enrichGOBarplot.HFDvsCPT.png)
+```{r, echo = FALSE, fig.show='hold', fig.align="center", out.width='0.8\\linewidth', fig.cap="Gràfic de barres de termes GO per HFD vs CPT"}
+include_graphics("results/enrichGOBarplot.HFDvsCPT.png")
+```
+
+```{r, echo = FALSE, fig.show='hold', fig.align="center", out.width='0.8\\linewidth', fig.cap="Gràfic de barres de pathways per HFD vs CPT"}
+include_graphics("results/enrichKEGGBarplot.HFDvsCPT.png")
+```
 
 
-![Barplot de HFD vs CPT](results/enrichKEGGBarplot.HFDvsCPT.png)
+```{r, echo = FALSE, fig.show='hold', fig.align="center", out.width='0.4\\linewidth', fig.cap="Gràfics de ret de termes GO i de pathways per HFD vs CPT"}
+include_graphics(c("results/enrichGOcnetplot.HFDvsCPT.png",
+                   "results/enrichKEGGcnetplot.HFDvsCPT.png"))
+```
+
+```{r, echo = FALSE, fig.show='hold', fig.align="center", out.width='0.8\\linewidth', fig.cap="Gràfic de barres de termes GO per NC vs HFD"}
+include_graphics("results/enrichGOBarplot.NCvsHFD.png")
+```
+
+```{r, echo = FALSE, fig.show='hold', fig.align="center", out.width='0.8\\linewidth', fig.cap="Gràfic de barres de pathways per NC vs HFD"}
+include_graphics("results/enrichKEGGBarplot.NCvsHFD.png")
+```
 
 
-![Gràfic de ret de HFD vs CPT](results/enrichGOcnetplot.HFDvsCPT.png)
+```{r, echo = FALSE, fig.show='hold', fig.align="center", out.width='0.4\\linewidth', fig.cap="Gràfics de ret de termes GO i de pathways per NC vs HFD"}
+include_graphics(c("results/enrichGOcnetplot.NCvsHFD.png",
+                   "results/enrichKEGGcnetplot.NCvsHFD.png"))
+```
+
+```{r, echo = FALSE, fig.show='hold', fig.align="center", out.width='0.8\\linewidth', fig.cap="Gràfic de barres de termes GO per NC vs CPT"}
+include_graphics("results/enrichGOBarplot.NCvsCPT.png")
+```
 
 
-![Gràfic de ret de HFD vs CPT](results/enrichKEGGcnetplot.HFDvsCPT.png)
+```{r, echo = FALSE, fig.show='hold', fig.align="center", out.width='0.8\\linewidth', fig.cap="Gràfic de barres de pathways per NC vs CPT"}
+include_graphics("results/enrichKEGGBarplot.NCvsCPT.png")
+```
 
+```{r, echo = FALSE, fig.show='hold', fig.align="center", out.width='0.4\\linewidth', fig.cap="Gràfics de ret de termes GO i de pathways per NC vs CPT"}
+include_graphics(c("results/enrichGOcnetplot.NCvsCPT.png",
+                   "results/enrichKEGGcnetplot.NCvsCPT.png"))
+```
+\newpage
 
-![Barplot de NC vs HFD](results/enrichGOBarplot.NCvsHFD.png)
+## 5. Discussió.
 
-
-![Gràfic de ret de NC vs HFD](results/enrichGOcnetplot.NCvsHFD.png)
-
-
-![Barplot de NC vs CPT](results/enrichGOBarplot.NCvsCPT.png)
-
-
-![Gràfic de ret de NC vs CPT](results/enrichGOcnetplot.NCvsCPT.png)
-
-
-
-### 5. Discussió.
-
-En principi no veig problemes en el disseny de l'estudi, entenent que l'objectiu és generar un perfil d'expressió.
+Entenent que l'objectiu és generar un perfil d'expressió, no veig problemes en el disseny de l'estudi.
 
 La principal limitació que veig és probablement comuna a tots els estudis de *microarrays*. Si bé l'estudi ens aporta un llistat de gens diferencialment expressats, i a partir d'aquests una sèrie de termes relacionats, no ens diu res sobre com hem d'interpretar aquestes dades. Això no pretén ser una crítica, simplement constatar la necessitat d'una bona interpretació dels resultats i de posar-los en el context d'altres possibles estudis relacionats que haguem fet o preveiem fer. En el cas d'aquest estudi probablement l'objectiu no és tant poder extreure unes conclusions concretes com proporcionar eines per poder-ho fer en altres estudis. 
 
 Un altre aspecte que sens dubte s'ha tingut en compte, tot i que no és específic d'un estudi de *microarrays*, són les limitacions del model d'organisme utilitzat. Aquest simula la malaltia d'interès, l'esteatosi hepàtica no alcohòlica, a partir de diferències de dieta entre grups de ratolins, i sembla obvi que tant per l'organisme estudiat com per la manera de provocar els símptomes hi haurà limitacions.
 
 
-### 6. Conclusions
+## 6. Conclusions
 
 Sense pretendre, per falta de coneixements específics, extreure conclusions concretes dels nostres resultats, sí que podem apuntar alguns comentaris preliminars.
 
@@ -670,12 +672,10 @@ El resultat és semblant en el cas del contrast NCvsCPT. També té sentit que s
 
 Seria interessant fer una comparació detallada entre els resultats dels dos contrastos i veure quina relació tenen les diferències amb el tractament d'ATCP que rep el grup CPT. Per exemple, en el contrast que inclou el grup de tractament observem un increment en el nombre de gens relacionats amb processos oxidatius, cosa que podria indicar que l'ATCP efectivament tindria un efecte activador d'aquests processos.
 
-Pel que fa al contrast HFDvsCPT, observem com a termes destacats uns de diferents.  Aquesta discrepància amb els altres contrastos probablement s'explica perquè en aquells la principal font de contrast era la diferència entre la dieta estàndard d'un grup i la dieta alta en greixos de l'altre. Al comparar dos grups amb dieta alta en greixos, aquesta diferència desapareix, quedant només l'efecte del tractament.
+Pel que fa HFDvsCPT, observem com a termes destacats uns de diferents de la resta de contrastos. Aquesta discrepància amb els altres probablement s'explica perquè en aquells la principal font de contrast era la diferència entre la dieta estàndard d'un grup i la dieta alta en greixos de l'altre. Al comparar dos grups amb dieta alta en greixos, aquesta diferència desapareix, quedant només l'efecte del tractament.
 
-Destaca la presència de diversos termes relacionats amb la síntesi proteica. S'hauria de veure si aquests són esperables d'acord amb el coneixement que tenim del tractament d'ATCP, ja que a primera vista podrien tenir poca relació amb el tipus d'efectes que estem estudiant.
-
-
+Hi destaca la presència de diversos termes relacionats amb la síntesi proteica. S'hauria de veure si aquests són esperables d'acord amb el coneixement que tenim del tractament d'ATCP, ja que a primera vista podrien tenir poca relació amb el tipus d'efectes que estem estudiant.
 
 
-
+## References
 
