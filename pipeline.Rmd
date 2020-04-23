@@ -10,6 +10,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+Codi utilitzat en l'anàlisi descrita a l'apartat 3.2 de l'informe.
 
 ### 3.2.1. Preparació de les dades.
 
@@ -119,7 +120,7 @@ include_graphics(c("extra_pics/mdNorm.png", "qcNorm/hm.png"))
 
 ### 3.2.5. Filtratge no específic.
 
-Filtrem els gens menys variables.
+Filtratge dels gens menys variables.
 
 ```{r}
 library(genefilter)
@@ -337,8 +338,7 @@ heatmap.2(heatData,
           sepwidth = c(0.05,0.05),
           cexRow = 0.5,
           cexCol = 0.9,
-          key = TRUE,
-          keysize = 1.5,
+          key = FALSE,
           density.info = "histogram",
           ColSideColors = c(rep("firebrick2",4), rep("dodgerblue3",5),
                             rep("limegreen",5)),
@@ -366,7 +366,7 @@ title("Gens diferencialment expressats segons cada comparació.")
 
 ### 3.2.9. Anàlisi de significació biològica.
 
-Generació del llistat d'identificadors *Entrez*.
+Generació dels llistats d'identificadors *Entrez*.
 
 ```{r}
 genesHFDvsCPT <- top_HFDvsCPT["adj.P.Val"]<0.25
@@ -387,6 +387,9 @@ EntrezNCvsCPT <- EntrezNCvsCPT$ENTREZID
 selectedIDs <- list(EntrezHFDvsCPT, EntrezNCvsHFD, EntrezNCvsCPT)
 names(selectedIDs) <- c("HFDvsCPT", "NCvsHFD", "NCvsCPT")
 ```
+
+
+Número de gens inclosos en cada llistat.
 
 ```{r}
 sapply(selectedIDs, length)
@@ -478,6 +481,8 @@ for (i in 1:length(listOfData)){
 
 
 ### 4. Resultats.
+
+Imatges dels ggràfics de resultats.
 
 ```{r, fig.show='hold', fig.align="center", out.width='0.8\\linewidth', fig.cap="Gràfic de barres de termes GO per HFD vs CPT"}
 include_graphics("results/enrichGOBarplot.HFDvsCPT.png")
