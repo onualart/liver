@@ -1,7 +1,7 @@
 ---
-title: "pipeline"
+title: "Pipeline corresponent a nualart_oriol_ADO_PEC1.pdf"
 author: "Oriol Nualart Mundó"
-date: "12/4/2020"
+date: "25/4/2020"
 output:
   pdf_document: default
 ---
@@ -10,18 +10,37 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Codi utilitzat en l'anàlisi descrita a l'apartat 3.2 de l'informe.
+Codi utilitzat als apartats 3.2 i 4 de l'informe nualart_oriol_ADO_PEC1.pdf.
 
-### 3.2.1. Preparació de les dades.
 
-Càrrega de l'arxiu targets.csv.
+## CONTINGUTS
+
+- **[3.2.1. Preparació de les dades](#preparació-de-les-dades)**
+- **[3.2.2. Control de qualitat de les dades crues](#control-de-qualitat-de-les-dades-crues)**
+- **[3.2.3. Normalització](#normalització)**
+- **[3.2.4. Control de qualitat de les dades normalitzades](#control-de-qualitat-de-les-dades-normalitzades)**
+- **[3.2.5. Filtratge no específic](#filtratge-no-específic)**
+- **[3.2.6. Identificació de gens diferencialment expressats](#identificació-de-gens-diferencialment-expressats)**
+- **[3.2.7. Anotació dels resultats](#anotació-dels-resultats)**
+- **[3.2.8. Comparació entre comparacions](#comparació-entre-comparacions)**
+- **[3.2.9. Anàlisi de significació biològica](#anàlisi-de-significació-biològica)**
+- **[4. Resultats](#resultats)**
+
+***
+
+\newpage
+
+
+### 3.2.1. Preparació de les dades
+
+- Càrrega de l'arxiu targets.csv.
 
 ```{r}
 targets <- read.csv2("./data/targets.csv", header = TRUE, sep = ";")
 ```
 
-
-Lectura dels arxius .CEL.
+  
+- Lectura dels arxius .CEL.  
 
 ```{r}
 library(oligo)
@@ -33,8 +52,8 @@ my.targets <-read.AnnotatedDataFrame(file.path("./data","targets.csv"),
 rawData <- read.celfiles(celFiles, phenoData = my.targets)
 ```
 
-
-Canvi del nom llarg de les mostres pel *ShortName*.
+  
+- Canvi del nom llarg de les mostres pel *ShortName*.  
 
 ```{r}
 my.targets@data$ShortName->rownames(pData(rawData))
@@ -43,9 +62,9 @@ colnames(rawData) <-rownames(pData(rawData))
 
 
 
-### 3.2.2. Control de qualitat de les dades crues.
+### 3.2.2. Control de qualitat de les dades crues
 
-Controls de qualitat del paquet *arrayQualityMetrics*.
+- Controls de qualitat del paquet *arrayQualityMetrics*.  
 
 ```{r}
 library(arrayQualityMetrics)
@@ -53,16 +72,16 @@ arrayQualityMetrics(rawData, intgroup = c("Diet", "ShortName"), outdir = "qcRaw"
                     force = TRUE)
 ```
 
-
-Visualització de la taula resum del control de qualitat i del heatmap.
+  
+- Visualització de la taula resum del control de qualitat i del heatmap. Nota: la imatge de la taula resum és una captura treta de l'informe de resultats.  
 
 ```{r, fig.show='hold', fig.align="center", out.width='0.4\\linewidth', fig.cap="Taula resum del control de qualitat de les dades crues i heatmap"}
 library(knitr)
 include_graphics(c("extra_pics/mdRaw.png", "qcRaw/hm.png"))
 ```
 
-
-Càrrega de les dades modificades.
+  
+- Càrrega de les dades modificades.  
 
 ```{r}
 targets <- read.csv2("./moddata/targets.csv", header = TRUE, sep = ";")
@@ -79,24 +98,24 @@ my.targets@data$ShortName->rownames(pData(rawData))
 colnames(rawData) <-rownames(pData(rawData))
 ```
 
-
-Repetició del control de qualitat.
+  
+- Repetició del control de qualitat.  
 
 ```{r}
 arrayQualityMetrics(rawData, intgroup = c("Diet", "ShortName"), outdir = "qcMod",
                     force = TRUE)
 ```
-
-Visualització de la taula resum i el heatmap.
+  
+- Visualització de la taula resum i el heatmap.  
 
 ```{r, fig.show='hold', fig.align="center", out.width='0.4\\linewidth', fig.cap="Taula resum del control de qualitat de les dades modificades i heatmap"}
 include_graphics(c("extra_pics/mdMod.png", "qcMod/hm.png"))
 ```
 
 
-### 3.2.3. Normalització.
+### 3.2.3. Normalització
 
-Correcció del soroll de fons, normalització i sumarització de les dades.
+- Correcció del soroll de fons, normalització i sumarització de les dades.  
 
 ```{r}
 library(oligo)
@@ -104,23 +123,23 @@ normData <- rma(rawData)
 ```
 
 
-### 3.2.4. Control de qualitat de les dades normalitzades.
+### 3.2.4. Control de qualitat de les dades normalitzades
 
-
+  
 ```{r}
 arrayQualityMetrics(normData, intgroup = c("Diet", "ShortName"), outdir = "qcNorm",
                     force = TRUE)
 ```
-
-Visualització de la taula resum i el heatmap.
+  
+- Visualització de la taula resum i el heatmap.  
 
 ```{r, fig.show='hold', fig.align="center", out.width='0.4\\linewidth', fig.cap="Taula resum del control de qualitat de les dades normalitzades i heatmap"}
 include_graphics(c("extra_pics/mdNorm.png", "qcNorm/hm.png"))
 ```
 
-### 3.2.5. Filtratge no específic.
+### 3.2.5. Filtratge no específic
 
-Filtratge dels gens menys variables.
+- Filtratge dels gens menys variables.  
 
 ```{r}
 library(genefilter)
@@ -133,13 +152,15 @@ filtered <- nsFilter(normData,
 filtData <- filtered$eset
 ```
 
+  
+- Visualització del número de gens descartats.  
 
 ```{r}
 print(filtered$filter.log)
 ```
 
-
-Guardem les dades, un cop normalitzades i un cop filtrades, en arxius .csv.
+  
+- Guardem les dades, un cop normalitzades i un cop filtrades, en arxius .csv.  
 
 ```{r}
 write.csv(exprs(normData), file="./results/normData.csv")
@@ -148,9 +169,9 @@ write.csv(exprs(filtData), file="./results/filtData.csv")
 
 
 
-### 3.2.6. Identificació de gens diferencialment expressats.
+### 3.2.6. Identificació de gens diferencialment expressats
 
-Matriu de disseny.
+- Matriu de disseny.  
 
 ```{r}
 library(limma)
@@ -159,8 +180,8 @@ colnames(designMat) <- c("CPT", "HFD", "NC")
 print(designMat)
 ```
 
-
-Matriu de contrastos.
+  
+- Matriu de contrastos.  
 
 ```{r}
 contMat <- makeContrasts (HFDvsCPT = CPT-HFD,
@@ -170,34 +191,33 @@ contMat <- makeContrasts (HFDvsCPT = CPT-HFD,
 print(contMat)
 ```
 
-
-Estimació del model.
+  
+- Estimació del model.  
 
 ```{r}
 library(limma)
 fit<-lmFit(filtData, designMat)
 ```
 
-
-Estimació dels contrastos.
+  
+- Estimació dels contrastos.  
 
 ```{r}
 fit.main<-contrasts.fit(fit, contMat)
-
 fit.main<-eBayes(fit.main)
 ```
 
-
-Guardem els resultats en un arxiu.
+  
+- Guardem els resultats en un arxiu.  
 
 ```{r}
 save(fit.main, file="./results/liver.fit.main.Rda")
 ```
 
+  
+- Exploració dels gens més diferencialment expressats en cada comparació.  
 
-Exploració dels gens més diferencialment expressats en cada comparació.
-
-HFD vs CPT:
+     HFD vs CPT:  
 
 ```{r}
 top_HFDvsCPT <- topTable (fit.main, number=nrow(fit.main), coef="HFDvsCPT",
@@ -205,16 +225,16 @@ top_HFDvsCPT <- topTable (fit.main, number=nrow(fit.main), coef="HFDvsCPT",
 head(top_HFDvsCPT)
 ```
 
-
-NC vs HFD:
+  
+     NC vs HFD:  
 
 ```{r}
 top_NCvsHFD <- topTable (fit.main, number=nrow(fit.main), coef="NCvsHFD", adjust="fdr") 
 head(top_NCvsHFD)
 ```
 
-
-NC vs CPT:
+  
+     NC vs CPT:  
 
 ```{r}
 top_NCvsCPT <- topTable (fit.main, number=nrow(fit.main), coef="NCvsCPT",
@@ -223,9 +243,9 @@ head(top_NCvsCPT)
 ```
 
 
-### 3.2.7. Anotació dels resultats.
+### 3.2.7. Anotació dels resultats
 
-Funció *annotatedTopTable*.
+- Funció *annotatedTopTable*.  
 
 ```{r}
 annotatedTopTable <- function(topTab, anotPackage)
@@ -240,7 +260,7 @@ return(annotatedTopTab)
 ```
 
 
-Generació de les anotacions.
+- Generació de les anotacions.  
 
 ```{r}
 library(mogene20sttranscriptcluster.db)
@@ -252,8 +272,8 @@ annot_NCvsHFD <- annotatedTopTable(top_NCvsHFD,
 annot_NCvsCPT <- annotatedTopTable(top_NCvsCPT,
                                    anotPackage="mogene20sttranscriptcluster.db")
 ```
-
-Guardem els *data frames* obtinguts en arxius .csv.
+  
+- Guardem els *data frames* obtinguts en arxius .csv.  
 
 ```{r}
 write.csv(annot_HFDvsCPT, file="./results/annot_HFDvsCPT.csv")
@@ -261,16 +281,16 @@ write.csv(annot_NCvsHFD, file="./results/annot_NCvsHFD.csv")
 write.csv(annot_NCvsCPT, file="./results/annot_NCvsCPT.csv")
 ```
 
-
-Volcano plots.
+  
+- Volcano plots.  
 
 ```{r}
 geneNames <- select(mogene20sttranscriptcluster.db, rownames(fit.main), c("GENENAME"))
 geneNames <- geneNames$GENENAME
 opt <- par(cex.lab = 0.7)
 ```
-
-HFD vs CPT:
+  
+     HFD vs CPT:  
 
 ```{r, echo = FALSE, message=FALSE, fig.show='hold', fig.align="center", out.width='0.7\\linewidth'}
 volcanoplot(fit.main, coef=1, highlight=10, names=geneNames,
@@ -280,8 +300,8 @@ abline(v=c(-1,1))
 par(opt)
 ```
 
-
-NC vs HFD:
+  
+     NC vs HFD:  
 
 ```{r, echo = FALSE, message=FALSE, fig.show='hold', fig.align="center", out.width='0.7\\linewidth'}
 volcanoplot(fit.main, coef=2, highlight=10, names=geneNames,
@@ -291,8 +311,8 @@ abline(v=c(-1,1))
 par(opt)
 ```
 
-
-NC vs CPT:
+  
+     NC vs CPT:  
 
 ```{r, echo = FALSE, message=FALSE, fig.show='hold', fig.align="center", out.width='0.7\\linewidth'}
 volcanoplot(fit.main, coef=3, highlight=10, names=geneNames,
@@ -302,8 +322,8 @@ abline(v=c(-1,1))
 par(opt)
 ```
 
-
-Selecció dels gens diferencialment expressats.
+  
+- Selecció dels gens diferencialment expressats.  
 
 ```{r}
 library(limma)
@@ -312,8 +332,8 @@ sum.res.rows <- apply(abs(res), 1, sum)
 res.selected <- res[sum.res.rows!=0,]
 ```
 
-
-*Heatmap*
+  
+- *Heatmap*  
 
 ```{r}
 library(gplots)
@@ -347,16 +367,16 @@ heatmap.2(heatData,
 ```
 
 
-### 3.2.8. Comparació entre comparacions.
+### 3.2.8. Comparació entre comparacions
 
-Número de gens diferencialment expressats en cada comparació.
+- Número de gens diferencialment expressats en cada comparació.  
 
 ```{r}
 print(summary(res))
 ```
 
-
-Diagrama de Venn.
+  
+- Diagrama de Venn.  
 
 ```{r}
 vennDiagram (res.selected[,1:3], cex=0.9)
@@ -364,9 +384,9 @@ title("Gens diferencialment expressats segons cada comparació.")
 ```
 
 
-### 3.2.9. Anàlisi de significació biològica.
+### 3.2.9. Anàlisi de significació biològica
 
-Generació dels llistats d'identificadors *Entrez*.
+- Generació dels llistats d'identificadors *Entrez*.  
 
 ```{r}
 genesHFDvsCPT <- top_HFDvsCPT["adj.P.Val"]<0.25
@@ -388,15 +408,15 @@ selectedIDs <- list(EntrezHFDvsCPT, EntrezNCvsHFD, EntrezNCvsCPT)
 names(selectedIDs) <- c("HFDvsCPT", "NCvsHFD", "NCvsCPT")
 ```
 
-
-Número de gens inclosos en cada llistat.
+  
+- Número de gens inclosos en cada llistat.  
 
 ```{r}
 sapply(selectedIDs, length)
 ```
 
-
-Genergeneració del llistat dels gens de ratolí amb anotacions a GO i a KEGG.
+  
+- Genergeneració del llistat dels gens de ratolí amb anotacions a GO i a KEGG.  
 
 ```{r}
 library(org.Mm.eg.db)
@@ -405,8 +425,8 @@ mapped_genes2KEGG <- mappedkeys(org.Mm.egPATH)
 mapped_genes <- union(mapped_genes2GO , mapped_genes2KEGG)
 ```
 
-
-Anàlisi d'enriquiment de termes GO.
+  
+- Anàlisi d'enriquiment de termes GO.  
 
 ```{r}
 library(clusterProfiler)
@@ -444,8 +464,8 @@ for (i in 1:length(listOfData)){
 }
 ```
 
-
-Anàlisi d'enriquiment de *pathways* KEGG.
+  
+- Anàlisi d'enriquiment de *pathways* KEGG.  
 
 ```{r}
 for (i in 1:length(listOfData)){
@@ -480,11 +500,12 @@ for (i in 1:length(listOfData)){
 ```
 
 
-### 4. Resultats.
+### 4. Resultats
 
-Imatges dels ggràfics de resultats.
+- Imatges dels gràfics de resultats.  
 
 ```{r, fig.show='hold', fig.align="center", out.width='0.8\\linewidth', fig.cap="Gràfic de barres de termes GO per HFD vs CPT"}
+library(knitr)
 include_graphics("results/enrichGOBarplot.HFDvsCPT.png")
 ```
 

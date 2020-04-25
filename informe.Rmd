@@ -1,7 +1,7 @@
 ---
 title: "Anàlisi de Dades Òmiques PAC1"
 author: "Oriol Nualart Mundó"
-date: "15/4/2020"
+date: "25/4/2020"
 output: pdf_document
 bibliography: bibliography.bib
 link-citations: true
@@ -37,7 +37,7 @@ knitr::opts_chunk$set(echo = FALSE)
         - **[3.2.9. Anàlisi de significació biològica](#anàlisi-de-significació-biològica)**
 * **[4. Resultats](#resultats)**
 * **[5. Discussió](#discussió)**
-* **[Referencies](#referencies)**
+* **[Referències](#refèrencies)**
 
 ***
 
@@ -51,7 +51,7 @@ Es sap que els àcids triterpenics de la planta *Cyclocarya paliurus* (ATCP) ten
 
 ## 2. Objectius
 
-Tot i que la informació que podem obtenir a partir de la pàgina de GEO no especifica els objectius concrets (l'estudi no està publicat), sabem que és un experiment de tipus "perfil d'expressió". Podem marcar uns objectius lògics.
+Tot i que la informació que podem obtenir a partir de la pàgina de GEO no especifica els objectius concrets (l'estudi no està publicat), sabem que busca fer un perfil d'expressió. Podem marcar uns objectius lògics.
 
 - Identificar gens que s'expressen diferencialment entre els grups de ratolins estudiats.
   + Per ampliar el coneixement general dels processos subjacents als símptomes de la malaltia, al comparar grups de ratolins no tractats.
@@ -93,7 +93,7 @@ A l'arxiu *targets* hem organitzat les dades, d'acord amb el disseny experimenta
 
 A partir d'aquí hem utilitzat R per fer el tractament de les dades.
 
-Primer hem carregat l'arxiu *targets*, i la informació dels arxius .CEL l'hem passat a l'objecte *rawData*.
+Primer hem carregat l'arxiu *targets*, i les dades crues contingudes als arxius .CEL les hem passat a l'objecte *rawData*.
 
 ```{r, include=FALSE}
 targets <- read.csv2("./data/targets.csv", header = TRUE, sep = ";")
@@ -119,7 +119,7 @@ colnames(rawData) <-rownames(pData(rawData))
 
 ###       3.2.2. Control de qualitat de les dades crues
 
-Per fer el control de qualitat de les dades crues hem aplicat la funció *arrayQualityMetrics* del paquet amb el mateix nom a *rawData*. Aquesta funció ens genera un informe molt complet, que inclou diversos gràfics que permeten fer una primera visualització de les dades, i també detecta possibles outliers segons diferents criteris.
+Per fer el control de qualitat de les dades crues hem aplicat la funció *arrayQualityMetrics* del paquet amb el mateix nom a les dades de *rawData*. Aquesta funció ens genera un informe molt complet, que inclou diversos gràfics que permeten fer una primera visualització de les dades, i també detecta possibles *outliers* segons diferents criteris.
 
 ```{r, include=FALSE}
 library(arrayQualityMetrics)
@@ -138,7 +138,7 @@ include_graphics(c("extra_pics/mdRaw.png", "qcRaw/hm.png"))
 
 Al resum del control de qualitat comprovem que es detecten alguns *outliers*, especialment a la mostra NC.5. Al *heatmap*, per exemple, es veu clarament que aquesta mostra (corresponent a la primera columna/última fila) es diferencia força de la resta.
 
-Tenint en compte que es tracta d'una mostra del grup control, del qual no esperariem grans variacions, optem per considerar-la poc fiable i no utilitzar-la en els anàlisis. De manera que creem una versió modificada de la carpeta de dades amb un arxiu targets modificat.
+Tenint en compte que es tracta d'una mostra del grup control, en el qual no esperem ni volem que hi hagi grans variacions, optem per considerar-la poc fiable i no utilitzar-la en els anàlisis. Per aquesta raó, creem una versió modificada de la carpeta de dades ("moddata") sense la mostra NC.5 i amb un arxiu targets modificat.
 
 
 ```{r, include=FALSE}
@@ -170,7 +170,7 @@ include_graphics(c("extra_pics/mdMod.png", "qcMod/hm.png"))
 ```
 
 
-Observem que ara no hi ha cap mostra amb més d'un marcador d'*outliers*. El *heatmap* és ara més uniforme, només la mostra CPT.1 és detectada com a *outlier* però no es visualitza una diferència tan destacada.
+Observem que ara no hi ha cap mostra amb més d'un marcador d'*outliers*. El *heatmap* és ara més uniforme, només la mostra CPT.1 és detectada com a *outlier*, però no es visualitza una diferència tan destacada.
 
 
 ###      3.2.3. Normalització
@@ -262,6 +262,7 @@ on *C* és la matriu de contrastos.
 
 
 La funció *model.matrix* del paquet *limma* [@3] ens genera fàcilment la matriu de disseny a partir de les nostres dades filtrades.
+\newpage
 
 ```{r, echo = FALSE, message=FALSE}
 library(limma)
@@ -279,7 +280,7 @@ Partint dels tres grups de ratolins estudiats, hi ha tres comparacions possibles
 
 + La comparació entre el grup HFD (dieta grassa) i el grup CPT (dieta grassa i tractament) ens dóna informació sobre el tractament.
 
-+ El contrast entre NC (dieta estàndard) i CPT (dieta grassa i tractament) per sí sol no ens dóna una informació útil, ja que en el fons està estudiant dos "factors" a la vegada, la dieta i el tractament. Tanmateix, una altra manera interessant d'extreure conclusions de l'experiment serà comparar dos contrastos: el contrast entre NC i HFD amb el contrast entre NC i CPT. La diferència entre aquests dos contrastos també ens donarà informació rellevant sobre l'efecte del tractament.
++ El contrast entre NC (dieta estàndard) i CPT (dieta grassa i tractament) per sí sol no ens dóna una informació útil, ja que en el fons està estudiant dos "factors" a la vegada, la dieta i el tractament (encara que al dissenyar l'estudi els haguem considerat com a parts d'un únic factor). Tanmateix, pot ser interessant comparar dos contrastos: el contrast entre NC i HFD amb el contrast entre NC i CPT. La diferència entre aquests dos contrastos també ens donarà informació rellevant sobre l'efecte del tractament.
 
 Per tant, inclourem a l'anàlisi els tres contrastos possibles.
 
@@ -322,7 +323,7 @@ save(fit.main, file="./results/liver.fit.main.Rda")
 ```
 
 
-Per fer una primera visualització d'algunes de les dades obtingudes, explorem amb la funció *topTable* els gens amb un p-valor més petit, dintre de les diferents comparacions. La funció, aplicada a *fit.main*, genera un *data frame* amb les dades d'una de les comparacions ordenades per p-valor. Obtenim els *data frames* *top_HFDvsCPT*, *top_NCvsHFD* i *top_NCvsCP*.
+Per fer una primera visualització d'algunes de les dades obtingudes, explorem amb la funció *topTable* els gens amb un p-valor més petit, dintre de les diferents comparacions. La funció, aplicada a *fit.main*, genera un *data frame* amb les dades de la comparació en qüestió ordenades per p-valor. Com a resultat obtenim els *data frames* *top_HFDvsCPT*, *top_NCvsHFD* i *top_NCvsCP*.
 
 
 HFDvsCPT:
@@ -368,7 +369,7 @@ return(annotatedTopTab)
 }
 ```
 
-El que fa la funció és associar els gens que tenim en els *data frames* obtinguts en els últims passos amb les anotacions disponibles per a aquests gens, que treiem del paquet d'anotacions corresponent al microarray utilitzat. Concretament, agafa els paràmetres "SYMBOL", "ENTREZID" i "GENENAME", que ens seran útils en els següents passos del nostre procediment d'anàlisi.
+El que fa la funció és associar els gens que tenim en els *data frames* obtinguts en els últims passos amb les anotacions disponibles per a aquests gens, que treiem del paquet d'anotacions corresponent al microarray utilitzat (*mogene20sttranscriptcluster.db*). Concretament, agafa els paràmetres "SYMBOL", "ENTREZID" i "GENENAME", que ens seran útils en els següents passos del nostre procediment d'anàlisi.
 
 ```{r, include=FALSE}
 library(mogene20sttranscriptcluster.db)
@@ -394,7 +395,7 @@ Per tenir una nova visualització de les dades un cop anotades, generem volcano 
 
 El volcano plot ens dóna una idea de com es distribueixen els gens pel que fa al *fold-change*, que ens indica les diferències d'expressió, i pel que fa al p-valor, que ens indica el grau de significació estadística d'aquestes diferències. Els punts que queden més amunt i més allunyats del centre en l'eix d'abcises són els que més ens interessen.
 
-```{r, einclude=FALSE}
+```{r, include=FALSE}
 geneNames <- select(mogene20sttranscriptcluster.db, rownames(fit.main), c("GENENAME"))
 geneNames <- geneNames$GENENAME
 opt <- par(cex.lab = 0.7)
@@ -429,6 +430,8 @@ par(opt)
 
 
 Els volcano plots ens confirmen la impressió que el contrast HFDvsCPT mostra poca diferència entre els dos grups, havent-hi pocs gens amb un p-valor baix i un *fold-change* destacable.
+
+També crida l'atenció el fet que la majoria de gens que apareixen destacats en els contrastos entre el grup de dieta estàndard (NC) i un grup amb dieta alta en greixos (HFD i CPT), ho fan amb un *fold-change* negatiu, és a dir que la majoria d'aquests gens quedarien inhibits per l'excés de greixos en la dieta.
 
 Passem a seleccionar els gens diferencialment expressats en alguna de les comparacions. La funció *decideTests* ho fa, a partir de les estimacions dels nostres contrastos que tenim a *fit.main*, agafant els gens que tenen un p-valor per sota d'un determinat número i un valor absolut del Log2 del *fold-change* per sobre d'un altre número. En el nostre cas hem utilitzat un límit de 0,1 per al p-valor i de 0.75 per al Log2 del *fold-change*.
 
@@ -486,9 +489,9 @@ Mirem quants gens diferencialment expressats hem obtingut amb cada contrast sego
 print(summary(res))
 ```
 
-Com ja ens anunciaven les visualitzacions preliminars, la comparació entre els grups CPT i HFD és amb diferència la que detecta menys gens diferencialment expressats, essent el grup NC el més diferent dels altres dos.
+Com ja ens anunciaven les visualitzacions preliminars, la comparació entre els grups HFD i CPT és clarament la que detecta menys gens diferencialment expressats (i el grup NC és per tant el que més es diferencia dels altres dos).
 
-Fem un diagrama de Venn per veure quants gens coincideixen a expressar-se diferencialment entre les diferents comparacions.
+Fem un diagrama de Venn per veure quants gens coincideixen a expressar-se diferencialment entre les comparacions.
 
 ```{r, echo = FALSE, message=FALSE}
 vennDiagram (res.selected[,1:3], cex=0.9)
@@ -496,7 +499,7 @@ title("Gens diferencialment expressats segons cada comparació.")
 ```
 
 
-Veiem que els dos contrastos amb major número de gens diferencialment expressats, NCvsHFD i NCvsCPT, comparteixen un número important de gens. Tots els contrastos tenen en comú amb altres contrastos aproximadament la meitat dels gens que han detectat.
+Veiem que els dos contrastos amb major número de gens diferencialment expressats, NCvsHFD i NCvsCPT, comparteixen un número important de gens. Això té sentit si ens fixem que els dos contrastos comparen el grup de dieta estàndard amb un grup de dieta alta en greixos (amb o sense tractament), i que aquesta diferència en la dieta sembla ser, pel que hem vist fins ara, la principal font de contrast entre els grups.
 
 
 ###      3.2.9. Anàlisi de significació biològica
@@ -632,10 +635,11 @@ Com a resultat de l'anàlisi hem obtingut una sèrie de dades per a cada compara
 
 - Un llistat de *pathways* relacionats amb aquests gens juntament amb alguns estadístics associats. Aquests llistats estan guardats als arxius "enrichKEGG.Results.XXXXXXXX.csv".
 
-Per a cada llistat de termes GO i de *pathways* també hem generat a mode de resum dos gràfics en arxius separats: un gràfic de barres mostrant el número de gens associats als principals termes, i un gràfic de ret d'aquests termes:
+Per a cada llistat de termes GO i de *pathways* també hem generat a mode de resum dos gràfics en arxius separats: un gràfic de barres mostrant el número de gens associats als principals termes, i un gràfic de ret d'aquests termes.
 
 
 ```{r, echo = FALSE, fig.show='hold', fig.align="center", out.width='0.8\\linewidth', fig.cap="Gràfic de barres de termes GO per HFD vs CPT"}
+library(knitr)
 include_graphics("results/enrichGOBarplot.HFDvsCPT.png")
 ```
 
@@ -682,21 +686,22 @@ include_graphics(c("results/enrichGOcnetplot.NCvsCPT.png",
 
 ## 5. Discussió
 
-Un aspecte que sens dubte s'ha tingut en compte al dissenyar l'estudi, tot i que no és específic d'un estudi de *microarrays*, són les limitacions del model d'organisme utilitzat. Aquest simula la malaltia d'interès, l'esteatosi hepàtica no alcohòlica, a partir de diferències de dieta entre grups de ratolins, i sembla obvi que tant per l'organisme estudiat com per la manera de provocar els símptomes hi haurà limitacions.
+Un aspecte que sens dubte s'ha tingut en compte al dissenyar l'estudi, tot i que no és específic d'un estudi de *microarrays*, són les limitacions del model d'organisme utilitzat. Aquest simula la malaltia d'interès, l'esteatosi hepàtica no alcohòlica, a partir de diferències de dieta entre grups de ratolins, i sembla obvi que tant per l'organisme estudiat com per la manera de provocar els símptomes ha de tenir limitacions.
 
-Pel que fa a la interpretació dels resultats, sense pretendre extreure'n conclusions concretes, sí que podem apuntar alguns comentaris.
+Pel que fa a la interpretació dels resultats obtinguts, sense pretendre extreure'n conclusions concretes, sí que podem apuntar alguns comentaris.
 
-Els termes GO i *pathways* detectats amb la comparació NCvsHFD semblen tenir bastant en comú amb el tipus de processos que esperem, ja que inclouen termes relacionats amb el metabolisme dels greixos i amb processos oxidatius. Té sentit que sigui així ja que els ratolins comparats en aquest contrast (ratolins control contra ratolins amb dieta grassa) esperem que es diferenciin precisament en la presència de símptomes com l'acumulació de greixos o l'estrès oxidatiu. Caldria veure quina relació poden tenir la resta de termes que apareixen destacats amb les diferències de dieta.
+Els termes GO i *pathways* detectats amb la comparació NCvsHFD semblen tenir bastant en comú amb el tipus de processos que esperem, ja que inclouen termes relacionats amb el metabolisme dels greixos i amb processos oxidatius. Té sentit que sigui així ja que els ratolins comparats en aquest contrast (ratolins control contra ratolins amb dieta grassa) esperem que es diferenciin precisament en la presència de símptomes com l'acumulació de greixos o l'estrès oxidatiu.
+
+Tanmateix, com hem vist en els volcano plots, la majoria dels gens diferencialment expressats en aquest contrast ho són per inhibició (amb l'excés de greixos a la dieta, el gen reduiria la seva expressió), i això d'entrada resulta poc intuitiu. Caldria veure quina és exactament la relació que poden tenir aquests gens amb les diferències de dieta. 
 
 El resultat és semblant en el cas del contrast NCvsCPT. També té sentit que sigui així perquè de nou estem comparant ratolins control amb ratolins amb dieta grassa, només que aquests últims a més reben tractament.
 
-Seria interessant fer una comparació detallada entre els resultats dels dos contrastos i veure quina relació tenen les diferències amb el tractament que rep el grup CPT. Per exemple, en el contrast que inclou el grup de tractament observem un increment en el nombre de gens relacionats amb processos oxidatius, cosa que podria indicar que l'ATCP efectivament tindria un efecte regulador d'aquests processos.
+Seria interessant fer una comparació detallada entre els resultats dels dos contrastos i veure quina relació tenen les diferències entre ells amb el fet que el grup CPT rebi tractament. Per exemple, en el contrast que inclou el grup de tractament observem un increment en el nombre de gens relacionats amb processos oxidatius, cosa que podria indicar que l'ATCP efectivament tindria un efecte regulador d'aquests processos.
 
-Pel que fa HFDvsCPT, observem com a termes destacats uns de diferents de la resta de contrastos. Aquesta discrepància amb els altres probablement s'explica perquè en aquells la principal font de contrast era la diferència entre la dieta estàndard d'un grup i la dieta alta en greixos de l'altre. Al comparar dos grups amb dieta alta en greixos, aquesta diferència desapareix, quedant només l'efecte del tractament, comparativament més reduit.
+Pel que fa HFDvsCPT, observem com a termes destacats uns de diferents de la resta de contrastos, i a més aquests termes tenen un nivell més baix de significació estadística. Aquesta discrepància probablement s'explica perquè en aquelles comparacions la principal font de contrast eren les diferencies de dieta (estàndard contra alta en greixos). Al comparar dos grups amb dieta alta en greixos, aquesta font de contrast desapareix, quedant només l'efecte del tractament, comparativament més reduit.
 
-En els resultats d'aquest contrast hi destaca la presència de diversos termes relacionats amb la síntesi proteica. S'hauria de veure si aquests són esperables d'acord amb el coneixement que tenim del tractament d'ATCP, ja que a primera vista podrien tenir poca relació amb el tipus d'efectes que estem estudiant.
 
 ***
 
-## Referencies
+## Referències
 
